@@ -2,32 +2,38 @@
 """
 Created on Thu Jul 25 08:49:10 2024
 
-@author: Admin
+@author: Chloe Bielawski
 """
 
 
-from sklearn import metrics
-from sklearn.cluster import DBSCAN
-from sklearn.neighbors import NearestNeighbors
-from math import *
-from astropy.stats import RipleysKEstimator
+#%% IMPORTS
+
+
 from pathlib import Path    
-
-
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import statistics as stat
-import math
-import scipy.stats as sts
 import scipy.spatial as spat
-import glob 
 import datetime
 
 
 import functionsAll as funct
 
-#%% 
+
+
+# from sklearn import metrics
+# from sklearn.cluster import DBSCAN
+# from sklearn.neighbors import NearestNeighbors
+# from math import *
+# from astropy.stats import RipleysKEstimator
+# import pandas as pd
+import math
+# import scipy.stats as sts
+# import glob 
+
+
+
+#%% PATHS
 
 # =============================================================================
 # paths to folder containing the csv files to analyse
@@ -50,7 +56,7 @@ dictionaryNames = {'wga':'R1WGA',
                    'phal':'R3PHAL', 
                    'aal':'R4AAL', 
                    'psa':'R5PSA', 
-                   'manaz':'R6MaNAz'}
+                   'mannaz':'R6ManNAz'}
 
 
 
@@ -74,7 +80,7 @@ dictionaryLocalizations = funct.MultChannelsCallToDict(pathLocsPoints, dictionar
 
 
 
-#%% new folder for analysis data 
+#%% NEW FOLDER FOR DATA ANALYSIS 
 
 # =============================================================================
 # crates new folder for the analysis data named as current date if no analysis 
@@ -94,7 +100,7 @@ if not Path(pathNewFolder).exists():
 
 
 
-#%% definition of study areas for ripley's analysis
+#%% DEFINITION OF STUDY AREAS FOR RIPLEYS ANALYSIS
 
 # =============================================================================
 # a few areas are selected for the ripley analysis instead off all the point 
@@ -104,18 +110,6 @@ if not Path(pathNewFolder).exists():
 # depending on the sahpe of the cell, a manual selsction of the areas might be 
 # more apropriate 
 # =============================================================================
-
-
-# =============================================================================
-# manual selection : 
-# (imput the coordinates of the bottom left corners of the box in the array)
-# =============================================================================
-# cuts = [[500, 30000],
-#         [5000, 45000], 
-#         [10000, 30000], 
-#         [15000, 30000], 
-#         [20000, 30000]]
-
 
 
 
@@ -132,6 +126,21 @@ cuts = [[stat.mean(X[:,0]), stat.mean(X[:,1])],
         [stat.mean(X[:,0]), stat.mean(X[:,1])-(stat.mean(X[:,1])-min(X[:,1]))/2]]
 
 
+
+# =============================================================================
+# manual selection : 
+# (imput the coordinates of the bottom left corners of the box in the array)
+# should be commented when not used
+# =============================================================================
+cuts = [[500, 30000],
+        [5000, 45000], 
+        [10000, 30000], 
+        [15000, 30000], 
+        [20000, 30000]]
+
+
+
+
 # =============================================================================
 # display of the study areas for ripley
 # the user might want to consider manually selecting the areas if more than 
@@ -141,7 +150,7 @@ cuts = [[stat.mean(X[:,0]), stat.mean(X[:,1])],
 plt.figure(figsize=(50,50)) # size of the figure 
 plt.plot(X[:, 0], X[:, 1], '.', ms=1) #the points of the cell 
 for i, j in cuts:
-    plt.plot([i, i, i+1000, i+1000, i], [j, j+1000, j+1000, j, j], color='red', linewidth=3)
+    plt.plot([i, i, i+1500, i+1500, i], [j, j+1500, j+1500, j, j], color='red', linewidth=3)
     #the study areas for ripley
 plt.show()
 
@@ -168,14 +177,14 @@ plt.show()
 
 
 radius = np.empty(len(dictionaryLocalizations)) #radius of ripley's H max
-nb = np.empty(len(dictionaryLocalizations)) #raw nb of points
+nb = np.empty(len(dictionaryLocalizations), int) #raw nb of points
 
 
 for i, j in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLocalizations))):
 
     radius[j] = funct.ripleyParametersForClustering(i, cuts) 
     
-    nb[j] = stat.median(spat.cKDTree(i).query_ball_point(i, r = radius[j], return_length=True))
+    nb[j] = math.ceil(stat.median(spat.cKDTree(i).query_ball_point(i, r = radius[j], return_length=True)))
     # the min number of points is the median of the number of neighbors
     # calculated for each poit of the channel
     
@@ -196,25 +205,32 @@ print(radius, nb)
 # automatically calculated is too hight
 # =============================================================================
 
-nbUsed = nb
+nbUsed = nb.copy()
+radiusUsed = radius.copy()
+
+maximumNbPoints = 20
 
 # if nb is > to 20, that value will be used instead
 for i in range(0, len(nbUsed)):
-    if nb[i]>20:  nbUsed[i]= 20
+    if nbUsed[i]>maximumNbPoints:  nbUsed[i]= maximumNbPoints
 
 
 
-#%% MANUAL CHOICE OF MIN NB OF POINTS / CLUSTER
+print(radiusUsed, nbUsed)
+
+
+#%% MANUAL CHOICE OF PARAMETERS
 
 # =============================================================================
-# the user can control of the number of points per cluster with the following array
+# the user can control of the number of points per cluster and radius 
+# with the following arrays
 # (comment the bloc when not used)
 # =============================================================================
 
 # nbUsed = [10, 10, 10, 10, 10]
 
 
-
+# radiusUsed = [10, 10, 10, 10, 10]
 
 
 
@@ -238,10 +254,10 @@ for i, j, k in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLoca
     # sample of the data to analyse 
 
     # title of the figure including channel and clustering parameters
-    title = 'Ripley Parameters ' + k + ' : esp = ' + "{:.3f}".format(radius[j]) + ', nbmin = ' + str(nbUsed[j])
+    title = ['Ripley Parameters ' + k + ' : esp = ' + "{:.3f}".format(radiusUsed[j]) + ', nbmin = ' + str(nbUsed[j])]
     
     # clustering with DBSCAN
-    labelsTest = funct.clusteringDBSCAN(dataTest, radius[j], nbUsed[j]) # 5, 5
+    labelsTest = funct.clusteringDBSCAN(dataTest, radiusUsed[j], nbUsed[j]) # 5, 5
     print(len(dataTest))
     centroids = funct.calculateCentroids(labelsTest, dataTest) #works
     
@@ -278,20 +294,15 @@ timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
 for i, j, k in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLocalizations)), dictionaryLocalizations.keys()):
     # for each of the channels in the dictionary 
 
-    # title of the figure including channel and clustering parameters
-    title = 'Ripley Parameters ' + k + ' : esp = ' + "{:.3f}".format(radius[j]) + ', nbmin = ' + str(nbUsed[j])
-    
     # clustering with DBSCAN
-    labelsTest = funct.clusteringDBSCAN(i, radius[j], nbUsed[j]) # 5, 5
+    labelsTest = funct.clusteringDBSCAN(i, radiusUsed[j], nbUsed[j]) # 5, 5
     print(len(i))
     centroids = funct.calculateCentroids(labelsTest, i) #works
     
     # path and name of the new CSV file containing localizations of centroids of clusters
-    fileName = timenow + k + '_centroids' # _r' + "{:.3f}".format(radius[j]) + '_nb' + str(nbUsed[j])
+    fileName = timenow + k + '_centroids' # _r' + "{:.3f}".format(radiusUsed[j]) + '_nb' + str(nbUsed[j])
     
     # save CSV
-    # funct.dictionaryToCsv({k + ' - centroids':centroids}, pathName + '.csv')
-    
     funct.dictionaryToCsv({'x [nm]':centroids[:,0], 'y [nm]':centroids[:,1]}, 
                           nameCsv = pathNewFolder + '/' + fileName + '.csv')
 
@@ -318,9 +329,10 @@ parametersfilename = timenow+'Parameters.txt'
 outfile = open(pathNewFolder + '/' + parametersfilename, 'w')
  
 outfile.write('Clustering method : Ripleys H function \n\n')
-outfile.write('Path to points for which to find neighbors : ' + pathLocsPoints + '\n\n')
+outfile.write('Path to points to cluster : ' + pathLocsPoints + '\n\n')
 outfile.write('Areas Ripley analysis : ' + str(cuts) + '\n\n')
-outfile.write('Max radius clusters : ' + str(radius) + '\n\n')
+outfile.write('Max radius clusters calculated : ' + str(radius) + '\n\n')
+outfile.write('Max radius clusters used : ' + str(radiusUsed) + '\n\n')
 outfile.write('Min points cluster calculated : ' + str(nb) + '\n\n')
 outfile.write('Min points cluster used : ' + str(nbUsed) + '\n\n')
 

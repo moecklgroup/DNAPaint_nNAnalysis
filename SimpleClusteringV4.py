@@ -2,29 +2,31 @@
 """
 Created on Tue Aug  6 09:42:58 2024
 
-@author: Admin
+@author: Chloe Bielawksi
 """
 
 
+#%% imports
 
-from sklearn import metrics
-from sklearn.cluster import DBSCAN
-from sklearn.neighbors import NearestNeighbors
+
 from pathlib import Path
-
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import statistics as stat
-import math
 import scipy.spatial as spat
 import glob 
 import datetime
 
 
-
 import functionsAll as funct
+
+
+
+# from sklearn import metrics
+# from sklearn.cluster import DBSCAN
+# from sklearn.neighbors import NearestNeighbors
+# import matplotlib.pyplot as plt
+# import math
 
 
 
@@ -52,9 +54,16 @@ dictionaryNames = {'wga':'R1WGA',
                    'phal':'R3PHAL', 
                    'aal':'R4AAL', 
                    'psa':'R5PSA', 
-                   'manaz':'R6MaNAz'}
+                   'mannaz':'R6ManNAz'}
 
 
+
+
+# =============================================================================
+# path to nearest neighbors data
+# =============================================================================
+
+pathDistNN = '5_colors_csv/2024-07-17_MCF10A_Lectin_DS019/well2/Cell1/analysis'
 
 
 
@@ -93,7 +102,7 @@ if not Path(pathNewFolder).exists():
 
 
 
-#%% NEARSET NEIGHBOR DATA FOR CLUSTERING
+#%% IMPORTING NEARSET NEIGHBOR DATA FOR CLUSTERING
 
 
 
@@ -102,7 +111,6 @@ if not Path(pathNewFolder).exists():
 # import already calculated distance to NN 
 # =============================================================================
 
-pathDistNN = '5_colors_csv/2024-07-17_MCF10A_Lectin_DS019/well2/Cell1/analysis'
 
 dictionaryDistNN = {}
 
@@ -162,24 +170,28 @@ print(radius, nb)
 
 
 
+nbUsed = nb.copy()
+
+radiusUsed = radius.copy()
 
 
 
 
 
-#%% MANUAL CHOICE OF MIN NB OF POINTS / CLUSTER
+
+#%% MANUAL CHOICE OF PARAMETERS
 
 # =============================================================================
-# the user can control of the number of points per cluster with the following array
+# the user can control of the number of points per cluster with the 
+# following arrays
 # (comment the bloc when not used)
 # =============================================================================
 
 # nbUsed = [10, 10, 10, 10, 10]
-nbUsed = nb
 
+# radiusUsed = [10, 10, 10, 10, 10]
 
-
-
+# print(radiusUsed, nbUsed)
 
 
 
@@ -202,10 +214,10 @@ for i, j, k in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLoca
     # sample of the data to analyse 
 
     # title of the figure including channel and clustering parameters
-    title = 'Precision Parameters ' + k + ' : esp = ' + "{:.3f}".format(radius[j]) + ', nbmin = ' + str(nbUsed[j])
+    title = ['Precision Parameters ' + k + ' : esp = ' + "{:.3f}".format(radiusUsed[j]) + ', nbmin = ' + str(nbUsed[j])]
     
     # clustering with DBSCAN
-    labelsTest = funct.clusteringDBSCAN(dataTest, radius[j], nbUsed[j]) # 5, 5
+    labelsTest = funct.clusteringDBSCAN(dataTest, radiusUsed[j], nbUsed[j]) # 5, 5
     print(len(dataTest))
     centroids = funct.calculateCentroids(labelsTest, dataTest) #works
     
@@ -239,10 +251,10 @@ for i, j, k in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLoca
     # for each of the channels in the dictionary 
 
     # title of the figure including channel and clustering parameters
-    title = 'Precision Parameters ' + k + ' : esp = ' + "{:.3f}".format(radius[j]) + ', nbmin = ' + str(nbUsed[j])
+    title = 'Precision Parameters ' + k + ' : esp = ' + "{:.3f}".format(radiusUsed[j]) + ', nbmin = ' + str(nbUsed[j])
     
     # clustering with DBSCAN
-    labels = funct.clusteringDBSCAN(i, radius[j], nbUsed[j]) # 5, 5
+    labels = funct.clusteringDBSCAN(i, radiusUsed[j], nbUsed[j]) # 5, 5
     print(len(i))
     centroids = funct.calculateCentroids(labels, i) #works
     
@@ -278,7 +290,8 @@ outfile = open(pathNewFolder + '/' + parametersfilename, 'w')
  
 outfile.write('Clustering method : 90nth percentile \n\n')
 outfile.write('Path to points for which to find neighbors : ' + pathLocsPoints + '\n\n')
-outfile.write('Max radius clusters : ' + str(radius) + '\n\n')
+outfile.write('Max radius clusters calculated : ' + str(radius) + '\n\n')
+outfile.write('Max radius clusters used : ' + str(radiusUsed) + '\n\n')
 outfile.write('Min points cluster calculated: ' + str(nb) + '\n\n')
 outfile.write('Min points cluster used : ' + str(nbUsed) + '\n\n')
 

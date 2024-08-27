@@ -2,27 +2,29 @@
 """
 Created on Wed Jul 24 15:26:52 2024
 
-@author: Admin
+@author: Chloe Bielawski
 """
+
+
+#%% imports
 
 
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
+from pathlib import Path    
+from astropy.stats import RipleysKEstimator
+from scipy.spatial import Delaunay
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.spatial import Delaunay
 import statistics as stat
 import random
 import math
-from astropy.stats import RipleysKEstimator
-import scipy.spatial as spat
-
-
 import glob 
-from pathlib import Path    
+
+
 
 
 
@@ -141,7 +143,7 @@ def displayPointsCentroids(dictFunct, dictCentroids, x, y, title):
                  markerfacecolor="none", markeredgewidth=3, 
                  label='controids ' + list(dictCentroids.keys())[0]) #centroids
         
-        plt.title(title, fontsize=x) 
+        plt.title(title[0], fontsize=x) 
         #title of figure => font size propotional to fig size
         plt.legend(fontsize='x-large', loc='upper right')
 
@@ -339,7 +341,7 @@ def nearestNeighborsMult(X,Y, nbNeighbors):
 def nearestNeighborsOneInAll(dictPoints,dictLocs): 
     
     """
-    Ssearch in X the [chosen number+1] NN for each point of Y 
+    Ssearch in X the first NN for each point of Y 
     
     Input:
 
@@ -547,12 +549,21 @@ def randomPartOfYourWorld(indexEdges, points):
     #empty array for the random points inside the cell 
     randomPoints = np.empty((len(points),2), float)
     
+    
+    
+    
     #random draws outside the loop to reduce running time (a bit)
-    hold = np.empty((len(points)*4, 2), float)
+    
+    factorExpRandPoints = 4    
+    
+    hold = np.empty((len(points)*factorExpRandPoints, 2), float)
     for i in range(0, len(hold)):
         hold[i] = [random.randrange(xmin*100, xmax*100)/100, 
                 random.randrange(ymin*100, ymax*100)/100]
         
+    
+    # checks if the points are inside or outside the shape
+    
     count = -1
     
     for i in tqdm(range(0, len(points))): 

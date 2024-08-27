@@ -5,44 +5,52 @@ Created on Thu Jul 18 13:40:03 2024
 @author: Chloe Bielawski
 """
 
-from sklearn import metrics
-from sklearn.cluster import DBSCAN
-from sklearn.neighbors import NearestNeighbors
-from math import *
+
+#%% imports
+
+
 from tqdm import tqdm
+from pathlib import Path    
+import datetime
 
-
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import statistics as stat
-import math
-import csv
-import scipy.stats as sts
 
 import functionsAll as funct
 
-import datetime
-
-import glob 
-from pathlib import Path    
 
 
-#%%
+
+# from sklearn import metrics
+# from sklearn.cluster import DBSCAN
+# from sklearn.neighbors import NearestNeighbors
+# from math import *
+
+# import matplotlib.pyplot as plt
+# import numpy as np
+# import pandas as pd
+# import statistics as stat
+# import math
+# import csv
+# import scipy.stats as sts
+# import glob 
+
+
+
+
+#%% paths and name dictionary
 
 
 
 # =============================================================================
-# paths to folder containing the csv files to analyse
+# paths to the csv files to analyse
 # 
-# if the csv files ares the same for the opint in search of a neighbor 
-# and those for the pool of potential neighbors, 
+# if the csv files ares the same for the points in search of a neighbor 
+# and those that make up the pool of potential neighbors, 
 # then pathLocsPoints = 'path/to/folder'
 # and pathLocsNeighbors = pathLocsPoints
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r'5_colors_csv\2024-07-17_MCF10A_Lectin_DS019\well2\Cell1'
+pathLocsPoints = r'C:\Users\Admin\Desktop\csv_dnapaint'
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -50,7 +58,7 @@ pathLocsNeighbors = pathLocsPoints
 
 
 # =============================================================================
-# dictionary of equivalence names of source files and futur names of new 
+# dictionary of equivalence: names of source files and futur names of new 
 # created files and figures
 # 
 # to update when new lectins are used 
@@ -60,10 +68,22 @@ dictionaryNames = {'wga':'R1WGA',
                    'sna':'R2SNA', 
                    'phal':'R3PHAL', 
                    'aal':'R4AAL', 
-                   'psa':'R5PSA', 
-                   'manaz':'R6MaNAz'}
+                   'psa':'R5PSA'}
 
     
+
+
+# =============================================================================
+# histogram parameters
+# =============================================================================
+
+# histogram distances points to nearest neighbors in same channel
+rangeUpSameChannel = 100 #maximum display x axis
+binsizeSameChannel = 0.1 #bin size
+
+# histogram distances points to nearest neighbors in different channel
+rangeUpCrossChannel = 200 #maximum display x axis
+binsizeCrossChannel = 0.2 #binsize
 
 
 
@@ -77,11 +97,10 @@ dictionaryLocalizationsPoints = funct.MultChannelsCallToDict(pathLocsPoints, dic
 
 # if the paths are the same, there is no need to import the files again 
 if pathLocsNeighbors == pathLocsPoints:
-    dictionaryLocalizationsNeighbors = dictionaryLocalizationsPoints
+    dictionaryLocalizationsNeighbors = dict(dictionaryLocalizationsPoints)
 
 else:
     dictionaryLocalizationsNeighbors = funct.MultChannelsCallToDict(pathLocsNeighbors, dictionaryNames)
-
 
 
 
@@ -101,8 +120,6 @@ else:
 pathNewFolder = pathLocsPoints + '/' + str(datetime.date.today())
 if not Path(pathNewFolder).exists():
     Path(pathNewFolder).mkdir()
-
-
 
 
 
@@ -152,9 +169,6 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
     
     nameFIG = timenow+'HistDistNN_'+i+'_In_'+list(dictionaryLocalizationsNeighbors.keys())[list(dictionaryLocalizationsPoints.keys()).index(i)]
     
-    rangeUpSameChannel = 100
-    binsizeSameChannel = 0.1
-    
     #display hist of distance to NN for channel i in channel i
     funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if k == list(dictionaryDist.keys())[list(dictionaryLocalizationsPoints).index(i)]}, 
                             rangeUp=rangeUpSameChannel, #max x of histogram display
@@ -162,11 +176,10 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
                             path=pathNewFolder+'/'+nameFIG) 
     
     
+    
+    
     nameFIG = timenow+'HistDistNN_'+i+'_In_All'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0: nameFIG = nameFIG+'random'
-    
-    rangeUpCrossChannel = 200
-    binsizeCrossChannel = 0.2
     
     #display hist of distance to NN for channel i in all others 
     funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if not k == list(dictionaryDist.keys())[list(dictionaryLocalizationsPoints).index(i)]}, 
@@ -207,10 +220,10 @@ outfile = open(pathNewFolder + '/' + parametersfilename, 'w')
  
 outfile.write('Path to points for which to find neighbors : ' + pathLocsPoints + '\n\n')
 outfile.write('Path to pools of potential neighbors : ' + pathLocsNeighbors + '\n\n')
-outfile.write('Range histogram same channel : 0-' + str(rangeUpSameChannel) + '\n\n')
-outfile.write('bin size histogram same channel : ' + str(binsizeSameChannel) + '\n\n')
-outfile.write('Range histogram same channel : 0-' + str(rangeUpCrossChannel) + '\n\n')
-outfile.write('bin size histogram same channel : ' + str(binsizeCrossChannel) + '\n\n')
+outfile.write('Range histogram same channel : 0-' + str(rangeUpSameChannel) + ' (nm) \n\n')
+outfile.write('bin size histogram same channel : ' + str(binsizeSameChannel) + ' (nm) \n\n')
+outfile.write('Range histogram cross channel : 0-' + str(rangeUpCrossChannel) + ' (nm) \n\n')
+outfile.write('bin size histogram cross channel : ' + str(binsizeCrossChannel) + ' (nm) \n\n')
 
 outfile.close() #Close the file when done
 
