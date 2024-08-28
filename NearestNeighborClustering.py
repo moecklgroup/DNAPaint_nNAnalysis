@@ -185,11 +185,13 @@ radiusUsed = radius.copy()
 
 # radiusUsed = [10, 10, 10, 10, 10]
 
-# print(radiusUsed, nbUsed)
 
 
 
 #%% CHECK ACCURACY OF CLUSERING
+
+print(radiusUsed, nbUsed)
+
 
 # =============================================================================
 # this part is not saved but is a way to check the parameters for the clustering 
