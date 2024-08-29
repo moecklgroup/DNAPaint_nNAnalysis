@@ -24,6 +24,7 @@ import random
 import math
 import glob 
 
+import scipy.spatial as spat
 
 
 
@@ -629,7 +630,7 @@ def randomDistributionAll(points, alphaParameter):
 
 
 
-def ripleyParametersForClustering(array, cuts):
+def ripleyParametersForClustering(array, cuts, path):
     
     """
     Returns the mean of the following values for the areas defined by cuts: 
@@ -649,6 +650,13 @@ def ripleyParametersForClustering(array, cuts):
     """
     
     radius = []
+    nb = []
+    
+    #radii to test for ripley's function
+    r = np.linspace(0, 400, 800)
+    
+    plt.figure(figsize=(15,5))
+    plt.plot(r, np.zeros(len(r)), '--', color='red')
     
     #for each of the areas defined in cuts
     for i, j in tqdm(cuts):
@@ -661,21 +669,45 @@ def ripleyParametersForClustering(array, cuts):
         x_minTest = min(dataTest[:,0]); x_maxTest = max(dataTest[:,0])
         y_minTest = min(dataTest[:,1]); y_maxTest = max(dataTest[:,1])
         areaTest = (x_maxTest - x_minTest)*(y_maxTest - y_minTest)
+            
+        if areaTest > 0:
         
-        #radii to test for ripley's function
-        r = np.linspace(0, 80, 800)
-        
-        #implementing ripley's H function
-        R = RipleysKEstimator(areaTest, x_maxTest, y_maxTest, x_minTest, y_minTest)
-        ripleyHR1WGA = R.Hfunction(data = dataTest, radii = r, mode='none')
-        
-        #the max of ripley's H function is the cluster radius of maximum clustering
-        # = radius of clusters for DBSCAN
-        radius = np.append(radius, r[np.argmax(ripleyHR1WGA)])
-        
+            #implementing ripley's H function
+            R = RipleysKEstimator(areaTest, x_maxTest, y_maxTest, x_minTest, y_minTest)
+            ripleyH = R.Hfunction(data = dataTest, radii = r, mode='none')
+            
+            #the max of ripley's H function is the cluster radius of maximum clustering
+            # = radius of clusters for DBSCAN
+            if np.argmax(ripleyH)>0: #if clustered (clusterd if ripley's H above 0)
+                
+                radius = np.append(radius, r[np.argmax(ripleyH)])
+            
+                # nb = np.append(radius, math.ceil(stat.median(spat.cKDTree(dataTest).query_ball_point(dataTest, r = r[np.argmax(ripleyH)], return_length=True))))
+                nb = np.append(nb, math.ceil(stat.mean(spat.cKDTree(dataTest).query_ball_point(dataTest, r = r[np.argmax(ripleyH)], return_length=True))))
+                # the min number of points is the median of the number of neighbors
+                # calculated for each poit of the channel      
+                    
+            
+            plt.plot(r, ripleyH, label='Ripley H, study area ' + str(len(radius)))        
+            
+            
         continue
-        
-    return stat.mean(radius)
+    
+    plt.legend(fontsize='large', loc='upper right')
+    plt.xlabel('Radius (nm)')
+    plt.ylabel('Ripley H')
+    plt.savefig(path+'.png') #save figure as png in specified path    
+    
+    
+    if len(radius)>0:
+        if len(nb)>0:
+            return stat.mean(radius), stat.mean(nb)
+        else:
+            return stat.mean(radius), 0
+    elif len(nb)>0: 
+        return 0, stat.mean(nb)
+    else: 
+        return 0, 0
 
 
 
@@ -706,6 +738,8 @@ def MultChannelsCallToDict(path, dictionaryNames):
         #names of the files only (without extention or path)
         name = Path(i).stem
         
+        namePath = Path(i).stem
+        
         #import locations (csv)
         df = pd.read_csv(i)
         #coordinates of points only => in a np array
@@ -714,11 +748,14 @@ def MultChannelsCallToDict(path, dictionaryNames):
         #search for recognisable part in name of the dict and makes new names accordingly
         #names of lectins and state of randomness
         for i in dictionaryNames.keys():
-            if name.casefold().find(i) >= 0:
-                if name.casefold().find('random') >= 0:
+            if namePath.casefold().find(i) >= 0:
+                if namePath.casefold().find('random') >= 0:
                     name = dictionaryNames[i]+'random' 
                 else:
                     name = dictionaryNames[i]
+                    
+                if namePath.casefold().find('centroid') >= 0:
+                    name = name + '_centroids' 
 
         #add arry to dictionary of localizations 
         dictionaryLocalizations[name] = df

@@ -35,7 +35,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r'C:\Users\Admin\Desktop\csv_dnapaint'
+pathLocsPoints = r'5_colors_csv\2024-07-17_MCF10A_Lectin_DS019\well2\Cell1'
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -63,12 +63,12 @@ dictionaryNames = {'wga':'R1WGA',
 # =============================================================================
 
 # histogram distances points to nearest neighbors in same channel
-rangeUpSameChannel = 100 #maximum display x axis
-binsizeSameChannel = 0.1 #bin size
+rangeUpSameChannel = 1000 #maximum display x axis
+binsizeSameChannel = 5 #bin size
 
 # histogram distances points to nearest neighbors in different channel
-rangeUpCrossChannel = 200 #maximum display x axis
-binsizeCrossChannel = 0.2 #binsize
+rangeUpCrossChannel = 1000 #maximum display x axis
+binsizeCrossChannel = 5 #binsize
 
 
 
@@ -140,7 +140,9 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
     nameCSV = timenow+'DistNN_'+i+'_In_All'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0:
         nameCSV = nameCSV+'random'
-    
+    if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0:
+        nameCSV = nameCSV+'_centroids'
+        
     #save to csv (in the new folder inside original folder of the raw data)
     funct.dictionaryToCsv(dictionaryDist, pathNewFolder+'/'+nameCSV+'.csv')
     
@@ -164,8 +166,11 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
     
     
     nameFIG = timenow+'HistDistNN_'+i+'_In_All'
-    if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0: nameFIG = nameFIG+'random'
-    
+    if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0: 
+        nameFIG = nameFIG+'random'
+    if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0: 
+        nameFIG = nameFIG+'_centroids'
+        
     #display hist of distance to NN for channel i in all others 
     funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if not k == list(dictionaryDist.keys())[list(dictionaryLocalizationsPoints).index(i)]}, 
                             rangeUp=rangeUpCrossChannel, #max x of histogram display

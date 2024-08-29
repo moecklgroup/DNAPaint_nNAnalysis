@@ -32,7 +32,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points to cluster
-pathLocsPoints = r'5_colors_csv\2024-07-17_MCF10A_Lectin_DS019\well2\Cell1'
+pathLocsPoints = r'5_colors_csv\2024-07-17_MCF10A_Lectin_DS019\well2\Cell1\2024-08-29'
 
 
 
@@ -104,8 +104,11 @@ if not Path(pathNewFolder).exists():
 # =============================================================================
 
 
+holdKey = 'R1WGA'
+if list(dictionaryLocalizations.keys())[0].casefold().find('centroid') >= 0: 
+    holdKey = holdKey+'_centroids'
 
-X = dictionaryLocalizations['R1WGA']
+X = dictionaryLocalizations[holdKey]
 
 # =============================================================================
 # automatic selection : 
@@ -157,6 +160,15 @@ plt.show()
 
 #%% RIPLEY'S PARAMETERS DBSCAN 1
 
+
+
+timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
+# timestamp in the beginning of all new data files for identification
+# is the same for all files of the same analysis (run of code)
+
+
+
+
 # =============================================================================
 # calculatiosn of the radius of clusters and min number of points 
 # for each channel in the dictionry of localisations :
@@ -172,13 +184,15 @@ radius = np.empty(len(dictionaryLocalizations)) #radius of ripley's H max
 nb = np.empty(len(dictionaryLocalizations), int) #raw nb of points
 
 
-for i, j in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLocalizations))):
+for i, j, k in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLocalizations)), dictionaryLocalizations.keys()):
 
-    radius[j] = funct.ripleyParametersForClustering(i, cuts) 
+    name = timenow + '_RipleyH_' + k
+
+    radius[j], nb[j] = funct.ripleyParametersForClustering(i, cuts, pathNewFolder+'/'+name) 
     
-    nb[j] = math.ceil(stat.median(spat.cKDTree(i).query_ball_point(i, r = radius[j], return_length=True)))
-    # the min number of points is the median of the number of neighbors
-    # calculated for each poit of the channel
+    # nb[j] = math.ceil(stat.median(spat.cKDTree(i).query_ball_point(i, r = radius[j], return_length=True)))
+    # # the min number of points is the median of the number of neighbors
+    # # calculated for each poit of the channel
     
 print(radius, nb)
 
@@ -187,26 +201,42 @@ print(radius, nb)
 
 
 
-
+nbUsed = nb.copy()
+radiusUsed = radius.copy()
 
 
 #%% RIPLEY'S PARAMETERS DBSCAN 2
+
+
+nbUsed = nb.copy()
+radiusUsed = radius.copy()
 
 # =============================================================================
 # this bloc is used to change the value of min number of points if the value 
 # automatically calculated is too hight
 # =============================================================================
 
-nbUsed = nb.copy()
-radiusUsed = radius.copy()
 
-maximumNbPoints = 20
+maximumNbPoints = 20  #max(nb) #parameter to keep the values as calculated
 
 # if nb is > to 20, that value will be used instead
 for i in range(0, len(nbUsed)):
     if nbUsed[i]>maximumNbPoints:  nbUsed[i]= maximumNbPoints
 
 
+
+
+
+# =============================================================================
+# necessary minimum parameters for clustering
+# =============================================================================
+minimumRadius = 1
+for i in range(0, len(radiusUsed)):
+    if radiusUsed[i]<minimumRadius:  radiusUsed[i]= minimumRadius
+    
+minimumNbPoints = 2
+for i in range(0, len(nbUsed)):
+    if nbUsed[i]<minimumNbPoints:  nbUsed[i]= minimumNbPoints
 
 print(radiusUsed, nbUsed)
 
@@ -239,22 +269,29 @@ print(radiusUsed, nbUsed)
 for i, j, k in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLocalizations)), dictionaryLocalizations.keys()):
     # for each of the channels in the dictionary 
     
-    dataTest = i[(i[:,0] >= stat.mean(i[:,0])) & 
-                 (i[:,0] <= stat.mean(i[:,0])+2000) & 
-                 (i[:,1] >= stat.mean(i[:,1])) & 
-                 (i[:,1] <= stat.mean(i[:,1])+2000)]
-    # sample of the data to analyse 
-
-    # title of the figure including channel and clustering parameters
-    title = ['Ripley Parameters ' + k + ' : esp = ' + "{:.3f}".format(radiusUsed[j]) + ', nbmin = ' + str(nbUsed[j])]
     
-    # clustering with DBSCAN
-    labelsTest = funct.clusteringDBSCAN(dataTest, radiusUsed[j], nbUsed[j]) # 5, 5
-    print(len(dataTest))
-    centroids = funct.calculateCentroids(labelsTest, dataTest) #works
+    for cuti, cutj in cuts:
     
-    # display of the points and centers of clusters
-    funct.displayPointsCentroids({k:dataTest}, {k:centroids}, 30, 30, title)
+        dataTest = i[(i[:,0] >= cuti) & (i[:,0] <= cuti+1500) & 
+                         (i[:,1] >= cutj) & (i[:,1] <= cutj+1500)]    
+    
+    
+        # dataTest = i[(i[:,0] >= stat.mean(i[:,0])) & 
+        #              (i[:,0] <= stat.mean(i[:,0])+3000) & 
+        #              (i[:,1] >= stat.mean(i[:,1])) & 
+        #              (i[:,1] <= stat.mean(i[:,1])+3000)]
+        # sample of the data to analyse 
+    
+        # title of the figure including channel and clustering parameters
+        title = ['Ripley Parameters ' + k + ' : esp = ' + "{:.3f}".format(radiusUsed[j]) + ', nbmin = ' + str(nbUsed[j])]
+        
+        # clustering with DBSCAN
+        labelsTest = funct.clusteringDBSCAN(dataTest, radiusUsed[j], nbUsed[j]) 
+        print(len(dataTest))
+        centroids = funct.calculateCentroids(labelsTest, dataTest) 
+        
+        # display of the points and centers of clusters
+        funct.displayPointsCentroids({k:dataTest}, {k:centroids}, 30, 30, title)
 
 
 
@@ -267,12 +304,6 @@ for i, j, k in zip(dictionaryLocalizations.values(), range(0, len(dictionaryLoca
 
 
 #%% CLUSTERING AND SAVING OF RESULTS
-
-
-
-timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
-# timestamp in the beginning of all new data files for identification
-# is the same for all files of the same analysis (run of code)
 
 
 
