@@ -234,7 +234,7 @@ minimumRadius = 1
 for i in range(0, len(radiusUsed)):
     if radiusUsed[i]<minimumRadius:  radiusUsed[i]= minimumRadius
     
-minimumNbPoints = 2
+minimumNbPoints = 3
 for i in range(0, len(nbUsed)):
     if nbUsed[i]<minimumNbPoints:  nbUsed[i]= minimumNbPoints
 
