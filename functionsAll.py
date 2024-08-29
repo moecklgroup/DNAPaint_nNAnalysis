@@ -36,24 +36,28 @@ import scipy.spatial as spat
 def clusteringDBSCAN(X, epsChoice, minSampleChoice):
     
     """
-    Finds clusters in data from coordinates of points 
+    Finds clusters in data from coordinates of points with sklearn.cluster’s DBSCAN. 
+    DBSCAN takes all three parameters of the function and returns a label for each point. 
+    This label is a number (zero and above) assigned to the cluster to which the point belongs.
     
-    Prints the number of identifies clusters and the number of outlier points
+    Displays the number of identified clusters and the number of outlier points. 
+    Both of those values are extrapolated from the labels of the points.
     
-    Input: 
-        
-        X: Coordinates of points to cluster (2D array, float)
-        
-        epsChoice: Max distance to a point for the other to be considered its neighbor 
-        ~ max radius of cluster (float)
-        
-        minSampleChoice: Min neighbors for a point to be a core point of cluster 
-        ~ min number of points in a cluster (int)
+    Only handles one channel at a time.
     
-    Output:
-        
-        labels: Labels of points (=cluster they belong to ; -1 means noise) (1D array, int)
+    Parameters: 
+        X: Coordinates of the points to cluster (2D array, float).
+        epsChoice: Maximum distance to a point for the other to be its neighbour. 
+            Can be considered here the maximum radius of a cluster (float).
+        minSampleChoice: Minimum number of neighbours a point must have to be a core point. 
+            Can be considered here the minimum number of points in a cluster (int).
+    
+    Output: 
+        labels: Labels of points. Reference the cluster they belong to with -1 for noise 
+            points and numbers equal to or above zero for identified clusters (1D array, int).
+        Text display.
     """
+    
     
     db = DBSCAN(eps=epsChoice, min_samples=minSampleChoice).fit(X)
 
@@ -77,17 +81,19 @@ def clusteringDBSCAN(X, epsChoice, minSampleChoice):
 def displayPointsSize(dictFunct, x, y):
     
     """
-    Displays points as scatter from array of coordinates 
-
-    Input:
-        
-        dictFunct: dictionary of arrays of points to display (dict of 2D array)
-        
-        x and y: dimensions of the figure (float)
-
+    Displays the points passed as parameter as dots in a figure which dimensions can be controlled by the user. 
+    The coordinates of the points are passed as parameter using a dictionary of 2D arrays. 
+    
+    The different parts of the dictionary, corresponding to different channels, are displayed in separate figures.
+    
+    Handles multiple channels.
+    
+    Parameters:
+        dictFunct: Coordinates of the points to display (dictionary of 2D arrays, float).
+        x and y: Dimensions of the figure to plot (float).
+    
     Output: 
-        
-        display
+        Graphic display.
     """
     
     if len(dictFunct) == 1: #if only one figure to plot
@@ -116,22 +122,24 @@ def displayPointsSize(dictFunct, x, y):
 def displayPointsCentroids(dictFunct, dictCentroids, x, y, title):
     
     """
-    Display points and centroids of clusters from 2D arrays of coordinates
+    Displays the points passed as parameter in an array of x y coordinates for both the points and the centroids. 
     
-    Input:
-
-        dictFunct: dictionary of arrays of points to display - raw data (dict of 2D array)
-        
-        dictCentroids: dictionary of arrays of points to display - centroids (dict of 2D array)
-
-        x, y: dimensions of the figure (float)
-        
-        title: title of the figures 
-        (1D array of size = len(dictionaries) or string if 1 element in dict)
-
+    The points and centroids of same index in their respective dictionaries are considered to belong 
+    to the same channel and displayed in the same figure. The different parts of the 
+    dictionaries are displayed in separate figures.
+    
+    Handles multiple channels.
+    
+    Parameters:
+        dictFunct: Coordinates of the points to display (dictionary of 2D array, float).
+        dictCentroids: Dictionary of 2D arrays containing the coordinates of the centroids of 
+            clusters for the points of dictFunct (dictionary of 2D array, float).
+        x, y: Dimensions of the figure (float).
+        title: Title of the figures (1D array of strings with the same number of titles 
+            than entries in the dictionaries).
+    
     Output:
-
-        display
+        Graphic display.
     """
     
     if len(dictFunct) == 1:  #if only one figure to plot
@@ -178,23 +186,24 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path):
     
     
     """
-    Displays histograms of distance to NN, all in the same figure
-
-    Save histogram as png
+    Displays histograms for the data passed as parameter. All the histograms are displayed in the same figure. 
+    The beginning and number of bins are calculated inside the code from the binsize and maximum value of the studied dataset. 
+    The number of occurrences and x value of the highest bin is displayed on the figure for all the histograms.
     
-    Input: 
-
-        dictFunct: Dictionary of arrays of distance to NN (dict of 1D arrays)
-
-        rangeUp: 0-rangeUp for histogram display (float)
-        
-        binsize: Size of histogram bins (float)
-        
-        path: Path to folder where the figures will be saved 
-
+    The histograms are automatically saved as PNG files in path (path including the name of the new file).
+    
+    Handles multiple channels, but there are displayed in the same figure.
+    
+    Parameters:  
+        dictFunct: Values for the histogram (dictionary of 1D arrays, float).
+        rangeUp: Upper bound of the x range of displayed data in the histogram. 
+            Is used for proper placement and display of the histogram bins (float).
+        binsize: Size of histogram bins (float). 
+        path: Path to folder where the figures will be saved, including the name of the new file (str). 
+    
     Output:
-
-        Display histogram ; png
+        Display of histogram.
+        PNG file.
     """
     
     plt.figure(figsize=(15,5)) # size of the figure 
@@ -248,17 +257,17 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path):
 def calculateCentroids(labels, X):
     
     """
-    Calculate centroids of identified clusters
+    Calculates the centroids of identified clusters from the coordinates of the points and their DBSCAN labels.
     
-    Input:
-
-        labels: labels of identified clusters and all points  (array of int)
-
-        X: coordinates of points (2D array of float)
-
+    Only handles one channel at a time.
+    
+    Parameters:
+        labels: Cluster ID for each point of the dataset that has been clustered (1D array, int). 
+            The outlier points are labelled as -1 while the clusters are named from zero. 
+        X: Coordinates of points in the studied channel (2D array, float).
+    
     Output:
-
-        centroids: containing centroids of clusters (2D array of float)
+        centroids: Coordinates of the centroids of the clusters in the studied channel (2D array, float).
     """
     
     unique_labels = set(labels) #different clusters labels found by DBSCAN clustering
@@ -280,17 +289,20 @@ def calculateCentroids(labels, X):
 def nearestNeighborsClean(X, Y): 
     
     """
-    Search in X the NN for each point of Y 
+    Searches for the nearest neighbour of each point in a dataset amongst the points of another dataset. 
     
-    Input:
-
-        X: coordinates of points pool of possible NN (2D array of float)
-
-        Y: coordinates of points in search of NN (2D array of float)
-
+    Calculates the distance between each point and its nearest neighbour.
+    
+    Only one channel at a time.
+    
+    Parameters:
+        X: Coordinates of points that make up the pool of potential neighbours for the nearest neighbour search (2D array, float).
+        Y: Coordinates of points we need to find the nearest neighbours of (2D array, float).
+    
     Output:
-
-        distances: distance to NN for all points of Y in X (1D array of float)
+        Distances: Distance to the nearest neighbour of each point of Y in X (1D array, float). 
+        If the two datasets X and Y are the same, this function will return the second nearest 
+            neighbours to each point, as the first neighbour would be the point itself.
     """
     
     nbrs = NearestNeighbors(n_neighbors=2, algorithm='auto').fit(X) #basic the array in which we search the NN
@@ -308,21 +320,21 @@ def nearestNeighborsClean(X, Y):
 def nearestNeighborsMult(X,Y, nbNeighbors): 
     
     """
-    Search in X the [chosen number+1] NN for each point of Y 
+    Searches the selected number of nearest neighbours for each point in one dataset amongst the points of another dataset. 
     
-    And gives back the distance to the chosen number of nearset neighbours
+    Calculates the distance between each point and its nearest neighbours.
     
-    Input:
-
-        X: coordinates of points pool of possible NN (2D array of float)
-
-        Y: coordinated of points in search of NN (2D array of float)
-
-        nbNeighbors: number of neighbors to search for for each point of Y (int)
-
+    One channel at a time only.
+    
+    Parameters:
+        X: Coordinates of points that make up the pool of potential neighbours for the nearest neighbour search (2D array, float).
+        Y: Coordinates of points we need to find the nearest neighbours of (2D array, float).
+        nbNeighbors: Number of neighbours to find for each point of Y (int).
+    
     Output:
-
-        distances: distance to NN for all points of Y (in X) (nbNeighborsD array of float)
+        Distances: distance the nearest neighbours of each point of Y in X (nbNeighbors-D array, float). 
+            If the two datasets X and Y are the same, this function will return the second to nbNeighbours+1 
+            nearest neighbours to each point, as the first neighbour would be the point itself.
     """
     
     nbrs = NearestNeighbors(n_neighbors=nbNeighbors+1, algorithm='auto').fit(X) 
@@ -342,17 +354,19 @@ def nearestNeighborsMult(X,Y, nbNeighbors):
 def nearestNeighborsOneInAll(dictPoints,dictLocs): 
     
     """
-    Ssearch in X the first NN for each point of Y 
+    Searches the first nearest neighbour of each point in one dataset amongst the points of the datasets 
+    of another dictionary, sequentially for all the datasets of that dictionary. 
     
-    Input:
-
-        dictLocs: dictionary of arrays => coordinates of points pool of possible NN (2D array of float)
-
-        dictPoints: dictionary of 1 array => coordinates of points in search of NN (2D array of float)
-
+    Calculates the distance between each point and its nearest neighbour.
+    
+    Only handles one channel in multiple.
+    
+    Parameters:
+        dictLocs: Coordinates of points that are the pool of potential neighbours for the nearest neighbour search (dictionary of 2D array, float).
+        dictPoints: Coordinates of points in for which we want the nearest neighbour found (dictionary with a unique 2D array, float).
+    
     Output:
-
-        dictDist: distance to NN for all points of Y (in X) (nbNeighborsD array of float)
+        dictDist: Distance the nearest neighbours of each point of dictPoints in each array of dictLocs (dictionary of 1D array, float).
     """
     
     dictDist = {} #future dictionary of distances to NN for combinaisons of arrays 
@@ -382,20 +396,20 @@ def nearestNeighborsOneInAll(dictPoints,dictLocs):
 def dictionaryToCsv(dictFunct, nameCsv): 
     
     """
-    Makes dateframe from arrays in dictionary and converts the dataframe into csv file
-
-    Ajust dimentions of arrays if necessary
+    Converts a dictionary of arrays into a dataframe and then saves it as a unique CSV file. 
+    To make this possible, the dimensions of the arrays are adjusted to the length of the longest one. 
+    It is done by adding -1 to the end of the arrays until they reach the length of the longest one. 
     
-    Input:
- 
-        dictFunct: dictionary to save as csv (dict)
-        
-        nameCsv: name of the new csv file (string), including or not 
-        the path to a specific folder in which it will be saved
-
+    The CSV file is saved in the folder indicated by the path included in nameCsv.
+    
+    Handles multiple channels, but everything is saved to the same CSV file.
+    
+    Parameters:
+        dictFunct: Dictionary of arrays to save as a unique CSV file (dictionary of 1D arrays).
+        nameCsv: Name of the new CSV file (str), including or not the path to a specific folder in which it will be saved.
+    
     Output:
-
-        csv file
+        CSV file.
     """
     
     maxLength = max(len(dictFunct[i]) for i in dictFunct.keys())
@@ -474,21 +488,21 @@ def alpha_shape(points, alpha, only_outer=True):
 
 def partOfYourWorld(x, y, indexEdges, points): 
     """
-    Tells if point is inside or outside delimited space (cell)
+    Determinates if a point is inside or outside a predetermined shape. 
+    The shape is delimited by the couples of points that make up its edges. 
     
-    Input: 
-
-        x: x coordinate of the point (float)
-
-        y: y coordinate of the point (float)
-
-        indexEdges: index of points forming part of the edge of cell (2D array)
-
-        points: points of the cell (inside and outside) (2D array)
-
+    Only handles one channel at a time.
+    
+    Parameters: 
+        X and Y: Coordinates of the point (float)
+        indexEdges: Index of points in the dataset forming a part of the edge of the shape. 
+            The couples of points are the two ends of a segment of the polyhedric edge (2D array, int).
+        points: Coordinates of the points in the experimental dataset (2D array, float). 
+            They must be the points the shape was extrapolated from.
+    
     Output: 
-
-        TRUE (~inside) or FALSE (~outisde) (bool)
+        Boolean value indicating if the point is inside or outside the shape. 
+            The function returns TRUE if the point is inside the shape and FALSE if it is outside. 
     """    
 
     xEdgesInf = np.empty((50,2), int) ; inf = 0 #edges below the point (xaxis)
@@ -528,19 +542,28 @@ def partOfYourWorld(x, y, indexEdges, points):
 def randomPartOfYourWorld(indexEdges, points):
     
     """
-    Draws random point, check if it is inside the cell, and keep it if it is
+    Draws a pool of random points between the minimum and maximum coordinates of points in the experimental dataset for both axes. 
+    For every each of the points, it checks if the point is inside the shape and keep it if it is. 
+    Repeats until there is the same number of random points and experimental points inside the shape. 
     
-    Repeat until there is the same number of random points and experiemental points inside the figure
+    The function will stop if all the points originally drawn have been assessed. 
+    The default number of points drawn by this function is four times the number of points in the original dataset. 
+    It should be enough to have the same number of random points than experimental points, but not guaranteed. 
+    A warning message and ‘count of random points / count of experimental points’ inside the cell will be displayed in the console. 
+    The factor of random points drawn can be adjusted using the variable factorExpRandPoints.
     
-    Input: 
-
-        indexEdges: couples of indexes in 'points' that are part of the edge of cell
-
-        points: experimental points inside the cell 
-
+    Only handles one channel at a time.
+    
+    Parameters: 
+        indexEdges: Index of points in the dataset forming a part of the edge of the shape. 
+            The couples of points are the two ends of a segment of the polyhedric edge (2D array, int).
+        points: Coordinates of points in the experimental dataset (2D array, float). 
+            They must be the points the shape was extrapolated from.
+    
     Output:
-
-        randomPoints: array of random points inside the cell (same number than exp points)
+        randomPoints: Coordinates of random points inside the shape (2D array, float). 
+            Except error in the number of points drawn, there will be the same number of random points than experimental points. 
+        Text display if an error occurred in the number of random points originally drawn.
     """
     
     #parameters for random.randrange => ranges for coordinates of random point
@@ -597,17 +620,21 @@ def randomPartOfYourWorld(indexEdges, points):
 def randomDistributionAll(points, alphaParameter):
     
     """
-    Generate an array of random points inside a cell, the number of random and experimental points is equal
+    Calculates the alpha shape for the points of an experimental dataset. 
     
-    Input:
- 
-        points: coordinates of experimental points in a cell 
-        
-        alphaParameter : parameter for edges of alpha shape (depends on the shape precision wanted)
+    Generates an array of random points inside that shape. The number of random and experimental 
+    points is equal unless the initial number of random points drawn is insufficient.
+    
+    Only handles one channel at a time.
+    
+    Parameters:
+        points: Coordinates of points in the experimental dataset (2D array, float).
+        alphaParameter: Parameter defining the precision of the edges for the alpha shape (int).
     
     Output:
-        
-        randomPoints: array of random points inside a cell, the number of random and experimental points is equal
+        randomPoints: Coordinates of random points inside the shape (2D array, float). 
+            Except error in the number of points drawn, there will be the same number of random points than experimental points. 
+        Text display if an error occurred in the number of random points originally drawn.
     """
     
     edges = alpha_shape(points, alpha=alphaParameter, only_outer=True) #alphaParameter = 700 is nice for now 
@@ -633,20 +660,27 @@ def randomDistributionAll(points, alphaParameter):
 def ripleyParametersForClustering(array, cuts, path):
     
     """
-    Returns the mean of the following values for the areas defined by cuts: 
+    Calculates the radius of clusters for a maximal clustering using Ripley’s H function. 
+    The final value is the mean of the results for each of the areas passed as parameters with cuts. 
+    The results of Ripley’s H function for the study areas are displayed in a unique figure for each of the channels to cluster.
     
-    Determinate the mean size of clusters with ripley's H function 
-    (maximum is the radius of clusters for maximum clustering )
+    The function also calculates the minimum number of points in clusters for the radius of maximal clustering. 
+    This automatic minimum number of points for clustering is the mean number of neighbours of a point in the radius of maximum clustering. 
+    The number of neighbours for each point of a dataset is determined using spat.cKDTree(i).query_ball_point. 
+    The final value is the mean of the results for each of the areas passed as parameters with cuts.
     
-    Input:
-
-        array: points to cluster (1 channel) (2D array)
-
-        cuts: coordinates of start of area on which to apply ripley's function (2D array)
-
+    Only handles one channel at a time.
+    
+    Parameters:
+        array: Coordinates of the points to cluster (2D array, float).
+        cuts: Coordinates of the bottom left corners of the study areas for Ripley’s H (2D array, float). 
+            The dimension of the areas is 1500x1500nm.
+        path: Path to folder where the figures will be saved, including the name of the new file (str). 
+    
     Output:
-    
-        stat.mean(radius): mean size of clusters with ripley's H function 
+        stat.mean(radius): Mean radius of the clusters calculated for each area with Ripley’s H.
+        stat.mean(nb): Mean number of neighbours for points in each of the areas for the radius of maximum clustering.
+        Graphic display (Ripley’s H functions graph).
     """
     
     radius = []
@@ -715,17 +749,19 @@ def ripleyParametersForClustering(array, cuts, path):
 def MultChannelsCallToDict(path, dictionaryNames):
     
     """
-    Import each CSV file in the folder, make array of coordinates, make dictionary of all those arrays
+    Imports the CSV files in path and makes an array from the coordinates in each file. 
+    These arrays are added to a shared dictionary regrouping the coordinates of points for all imported channels. 
+    The arrays are named after the lectin (or other) used to image that channel (e.g. R1WGA) using the dictionary of names provided. 
     
-    Input:
-
-        path: path to folder containing the desired csv files (string)
-
-        dictionaryNames: equivalences between names of files and futur names (dict of string)
-
+    Handles multiple channels. They are kept in different arrays but the same dictionary.
+    
+    Parameters:
+        path: Path to folder containing the desired csv files (str).
+        dictionaryNames: Dictionary of equivalences between names of files and future names of variables, 
+            dictionaries and files (dictionary of str).
+    
     Output:
-
-        dictionaryLocalizations: dictionary of 2 arrays - coordinates of points for each channel
+        dictionaryLocalizations: Coordinates of points for each channel in path (dictionary of 2D arrays, float).
     """
     
     # array of all csv files in this folder (path to the files)
