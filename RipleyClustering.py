@@ -32,7 +32,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points to cluster
-pathLocsPoints = r'5_colors_csv\2024-07-17_MCF10A_Lectin_DS019\well2\Cell1\2024-08-29'
+pathLocsPoints = r'G:\2024-09-23_Don3_P1_NK_P13_A549\FOV2\CELL2_NK'
 
 
 
@@ -114,12 +114,12 @@ X = dictionaryLocalizations[holdKey]
 # automatic selection : 
 # (of the bottom left corners of the boxes)
 # =============================================================================
-cuts = [[stat.mean(X[:,0]), stat.mean(X[:,1])],
-        [stat.mean(X[:,0])+(max(X[:,0])-stat.mean(X[:,0]))/2, stat.mean(X[:,1])], 
-        [stat.mean(X[:,0])-(stat.mean(X[:,0])-min(X[:,0]))/2, stat.mean(X[:,1])], 
-        [stat.mean(X[:,0]), stat.mean(X[:,1])+(max(X[:,1])-stat.mean(X[:,1]))/2], 
-        [stat.mean(X[:,0]), stat.mean(X[:,1])-(stat.mean(X[:,1])-min(X[:,1]))/2]]
-
+#cuts = [[stat.mean(X[:,0]), stat.mean(X[:,1])], # middle
+#        [stat.mean(X[:,0])+(max(X[:,0])-stat.mean(X[:,0]))/2, stat.mean(X[:,1])], #right 
+#        [stat.mean(X[:,0])-(stat.mean(X[:,0])-min(X[:,0]))/2, stat.mean(X[:,1])], #left
+#        [stat.mean(X[:,0]), stat.mean(X[:,1])+(max(X[:,1])-stat.mean(X[:,1]))/2], #top
+#        [stat.mean(X[:,0]), stat.mean(X[:,1])-(stat.mean(X[:,1])-min(X[:,1]))/2]] # bottom
+#print(cuts)
 
 
 # =============================================================================
@@ -127,12 +127,11 @@ cuts = [[stat.mean(X[:,0]), stat.mean(X[:,1])],
 # (imput the coordinates of the bottom left corners of the box in the array)
 # should be commented when not used
 # =============================================================================
-# cuts = [[500, 30000],
-#         [5000, 45000], 
-#         [10000, 30000], 
-#         [15000, 30000], 
-#         [20000, 30000]]
-
+cuts = [[75917, 6481], 
+        [78000, 6400], 
+        [72825, 4522], 
+        [78000, 4522], 
+        [75917, 4522]]
 
 
 
@@ -207,9 +206,11 @@ radiusUsed = radius.copy()
 
 #%% RIPLEY'S PARAMETERS DBSCAN 2
 
+factorNb = 0.7
+factorRadius = 0.7
 
-nbUsed = nb.copy()
-radiusUsed = radius.copy()
+nbUsed = (factorNb * nb.copy()).astype(int)
+radiusUsed = factorRadius * radius.copy()
 
 # =============================================================================
 # this bloc is used to change the value of min number of points if the value 
@@ -217,11 +218,11 @@ radiusUsed = radius.copy()
 # =============================================================================
 
 
-maximumNbPoints = 20  #max(nb) #parameter to keep the values as calculated
+#maximumNbPoints = 20  #max(nb) #parameter to keep the values as calculated
 
 # if nb is > to 20, that value will be used instead
-for i in range(0, len(nbUsed)):
-    if nbUsed[i]>maximumNbPoints:  nbUsed[i]= maximumNbPoints
+#for i in range(0, len(nbUsed)):
+#    if nbUsed[i]>maximumNbPoints:  nbUsed[i]= maximumNbPoints
 
 
 
@@ -257,8 +258,7 @@ print(radiusUsed, nbUsed)
 
 
 
-#%% CHECK ACCURACY OF CLUSERING
-
+#%% CHECK ACCURACY OF CLUSTERING
 # =============================================================================
 # this part is not saved but is a way to check the parameters for the clustering 
 # and the accuracy of the results

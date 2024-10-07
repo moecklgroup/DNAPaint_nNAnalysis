@@ -5,24 +5,19 @@ Created on Thu Jul 18 13:40:03 2024
 @author: Chloe Bielawski
 """
 
-
-#%% imports
+# %% imports
 
 
 from tqdm import tqdm
-from pathlib import Path    
+from pathlib import Path
 import datetime
-
+import numpy as np
+import pandas as pd
+import cmasher as cmr
 
 import functionsAll as funct
 
-
-
-
-
-
-#%% paths and name dictionary
-
+# %% paths and name dictionary
 
 
 # =============================================================================
@@ -35,12 +30,9 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r'5_colors_csv\2024-07-17_MCF10A_Lectin_DS019\well2\Cell1'
+pathLocsPoints = r'G:\2024-09-23_Don3_P1_NK_P13_A549\FOV2\CELL2_NK'
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
-
-
-
 
 # =============================================================================
 # dictionary of equivalence: names of source files and futur names of new 
@@ -49,33 +41,25 @@ pathLocsNeighbors = pathLocsPoints
 # to update when new lectins are used 
 # =============================================================================
 
-dictionaryNames = {'wga':'R1WGA',  
-                   'sna':'R2SNA', 
-                   'phal':'R3PHAL', 
-                   'aal':'R4AAL', 
-                   'psa':'R5PSA'}
-
-    
-
+dictionaryNames = {'wga': 'R1WGA',
+                   'sna': 'R2SNA',
+                   'phal': 'R3PHAL',
+                   'aal': 'R4AAL',
+                   'psa': 'R5PSA'}
 
 # =============================================================================
 # histogram parameters
 # =============================================================================
 
 # histogram distances points to nearest neighbors in same channel
-rangeUpSameChannel = 1000 #maximum display x axis
-binsizeSameChannel = 5 #bin size
+rangeUpSameChannel = 1000  # maximum display x axis
+binsizeSameChannel = 0.2  # bin size
 
 # histogram distances points to nearest neighbors in different channel
-rangeUpCrossChannel = 1000 #maximum display x axis
-binsizeCrossChannel = 5 #binsize
+rangeUpCrossChannel = 1000  # maximum display x axis
+binsizeCrossChannel = 0.2  # binsize
 
-
-
-
-
-
-#%% import localizations for all six channels
+# %% import localizations for all six channels
 
 # makes 1 dictionary of arrays for the localizations of the points of all the channels
 dictionaryLocalizationsPoints = funct.MultChannelsCallToDict(pathLocsPoints, dictionaryNames)
@@ -87,13 +71,7 @@ if pathLocsNeighbors == pathLocsPoints:
 else:
     dictionaryLocalizationsNeighbors = funct.MultChannelsCallToDict(pathLocsNeighbors, dictionaryNames)
 
-
-
-
-
-
-
-#%% new folder for analysis data
+# %% new folder for analysis data
 
 # =============================================================================
 # crates new folder for the analysis data named as current date if no analysis 
@@ -106,12 +84,7 @@ pathNewFolder = pathLocsPoints + '/' + str(datetime.date.today())
 if not Path(pathNewFolder).exists():
     Path(pathNewFolder).mkdir()
 
-
-
-
-
-
-#%% distance to first nearest neighbor for one in all six channels
+# %% distance to first nearest neighbor for one in all six channels
 
 
 timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
@@ -119,10 +92,9 @@ timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
 # is the same for all files of the same analysis (run of code)
 
 
-
 # =============================================================================
 # parameters for the histogram that can be chaged : 
-    
+
 #   max x for display of the histogram 
 #         - 'rangeUp' parameter of the 'displayHistFigure' function
 #         => using the variables rangeUpSameChannel and rangeUpCrossChannel
@@ -132,67 +104,67 @@ timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
 #         => using the variables binsizeSameChannel and binsizeCrossChannel
 # =============================================================================
 
+maxima_x = pd.DataFrame(index=dictionaryLocalizationsPoints.keys(), columns=dictionaryLocalizationsPoints.keys())
+
 for i in tqdm(dictionaryLocalizationsPoints.keys()):
-    
-    #calculate the nearest neighbor for every point in that channel in all the others including itself
-    dictionaryDist = funct.nearestNeighborsOneInAll({i:dictionaryLocalizationsPoints[i]}, dictionaryLocalizationsNeighbors)
-    
-    nameCSV = timenow+'DistNN_'+i+'_In_All'
+
+    # calculate the nearest neighbor for every point in that channel in all the others including itself
+    dictionaryDist = funct.nearestNeighborsOneInAll({i: dictionaryLocalizationsPoints[i]},
+                                                    dictionaryLocalizationsNeighbors)
+
+    nameCSV = timenow + 'DistNN_' + i + '_In_All'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0:
-        nameCSV = nameCSV+'random'
+        nameCSV = nameCSV + 'random'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0:
-        nameCSV = nameCSV+'_centroids'
-        
-    #save to csv (in the new folder inside original folder of the raw data)
-    funct.dictionaryToCsv(dictionaryDist, pathNewFolder+'/'+nameCSV+'.csv')
-    
-    
-    
-# =============================================================================
-#     distance to NN of one channel in itself is displayed separatly 
-#     than the crosschannel distances to NN 
-# =============================================================================
-    
-    
-    nameFIG = timenow+'HistDistNN_'+i+'_In_'+list(dictionaryLocalizationsNeighbors.keys())[list(dictionaryLocalizationsPoints.keys()).index(i)]
-    
-    #display hist of distance to NN for channel i in channel i
-    funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if k == list(dictionaryDist.keys())[list(dictionaryLocalizationsPoints).index(i)]}, 
-                            rangeUp=rangeUpSameChannel, #max x of histogram display
-                            binsize=binsizeSameChannel, #histogram binsize
-                            path=pathNewFolder+'/'+nameFIG) 
-    
-    
-    
-    
-    nameFIG = timenow+'HistDistNN_'+i+'_In_All'
-    if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0: 
-        nameFIG = nameFIG+'random'
-    if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0: 
-        nameFIG = nameFIG+'_centroids'
-        
-    #display hist of distance to NN for channel i in all others 
-    funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if not k == list(dictionaryDist.keys())[list(dictionaryLocalizationsPoints).index(i)]}, 
-                            rangeUp=rangeUpCrossChannel, #max x of histogram display
-                            binsize=binsizeCrossChannel, #histogram binsize
-                            path=pathNewFolder+'/'+nameFIG) 
-    
+        nameCSV = nameCSV + '_centroids'
+
+    # save to csv (in the new folder inside original folder of the raw data)
+    funct.dictionaryToCsv(dictionaryDist, pathNewFolder + '/' + nameCSV + '.csv')
+
+    # =============================================================================
+    #     distance to NN of one channel in itself is displayed separatly
+    #     than the crosschannel distances to NN
+    # =============================================================================
+
+    nameFIG = timenow + 'HistDistNN_' + i + '_In_' + list(dictionaryLocalizationsNeighbors.keys())[
+        list(dictionaryLocalizationsPoints.keys()).index(i)]
+
+    # display hist of distance to NN for channel i in channel i
+    maxima_x = funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if
+                                        k == list(dictionaryDist.keys())[list(dictionaryLocalizationsPoints).index(i)]},
+                                       rangeUp=rangeUpSameChannel,  # max x of histogram display
+                                       binsize=binsizeSameChannel,  # histogram binsize
+                                       path=pathNewFolder + '/' + nameFIG,
+                                       maxima_matrix_x=maxima_x)
+
+    nameFIG = timenow + 'HistDistNN_' + i + '_In_All'
+    if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0:
+        nameFIG = nameFIG + 'random'
+    if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0:
+        nameFIG = nameFIG + '_centroids'
+
+    # display hist of distance to NN for channel i in all others
+    maxima_x = funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if
+                                        not k == list(dictionaryDist.keys())[
+                                            list(dictionaryLocalizationsPoints).index(i)]},
+                                       rangeUp=rangeUpCrossChannel,  # max x of histogram display
+                                       binsize=binsizeCrossChannel,  # histogram binsize
+                                       path=pathNewFolder + '/' + nameFIG,
+                                       maxima_matrix_x=maxima_x)
 
     # =============================================================================
     #     the csv files of distance to NN and figures 
     #     are automatically saved in a new folder (1/per day) inside the original 
     #     folder of the point in search of a neighbor (pathLocsPoints)
     # =============================================================================
-    
+
     continue
     # (for tqdm)
 
+print(maxima_x)
 
-
-
-
-
-
+nameFigMatrix = timenow + 'nN_matrix'
+funct.plot_matrix_histogram(maxima_x, path=pathNewFolder + '/' + nameFigMatrix)
 
 # save analysis parameters in txt file
 
@@ -203,11 +175,11 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
 # =============================================================================
 
 
-parametersfilename = timenow+'Parameters.txt'
+parametersfilename = timenow + 'Parameters.txt'
 
-#w tells python we are opening the file to write into it
+# w tells python we are opening the file to write into it
 outfile = open(pathNewFolder + '/' + parametersfilename, 'w')
- 
+
 outfile.write('Path to points for which to find neighbors : ' + pathLocsPoints + '\n\n')
 outfile.write('Path to pools of potential neighbors : ' + pathLocsNeighbors + '\n\n')
 outfile.write('Range histogram same channel : 0-' + str(rangeUpSameChannel) + ' (nm) \n\n')
@@ -215,10 +187,4 @@ outfile.write('bin size histogram same channel : ' + str(binsizeSameChannel) + '
 outfile.write('Range histogram cross channel : 0-' + str(rangeUpCrossChannel) + ' (nm) \n\n')
 outfile.write('bin size histogram cross channel : ' + str(binsizeCrossChannel) + ' (nm) \n\n')
 
-outfile.close() #Close the file when done
-
-
-
-
-
-
+outfile.close()  # Close the file when done

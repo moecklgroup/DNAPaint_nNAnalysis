@@ -5,14 +5,13 @@ Created on Wed Jul 24 15:26:52 2024
 @author: Chloe Bielawski
 """
 
-
-#%% imports
+# %% imports
 
 
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
-from pathlib import Path    
+from pathlib import Path
 from astropy.stats import RipleysKEstimator
 from scipy.spatial import Delaunay
 
@@ -22,19 +21,20 @@ import pandas as pd
 import statistics as stat
 import random
 import math
-import glob 
+import glob
+#import cmasher as cmr
+import os
+from matplotlib.colors import ListedColormap, BoundaryNorm
 
 import scipy.spatial as spat
 
+SAVEFORMAT='png'
 
 
-
-
-#%% clusteringDBSCAN
+# %% clusteringDBSCAN
 
 
 def clusteringDBSCAN(X, epsChoice, minSampleChoice):
-    
     """
     Finds clusters in data from coordinates of points with sklearn.cluster’s DBSCAN. 
     DBSCAN takes all three parameters of the function and returns a label for each point. 
@@ -57,29 +57,24 @@ def clusteringDBSCAN(X, epsChoice, minSampleChoice):
             points and numbers equal to or above zero for identified clusters (1D array, int).
         Text display.
     """
-    
-    
+
     db = DBSCAN(eps=epsChoice, min_samples=minSampleChoice).fit(X)
 
-    labels = db.labels_ 
+    labels = db.labels_
     # one number for each different cluster; -1 for noise
 
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0) 
-    #number of cluster without counting the noisy points (label = -1)
-    n_noise_ = list(labels).count(-1) 
-    #count number of noise points (labels = -1)
-
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    # number of cluster without counting the noisy points (label = -1)
+    n_noise_ = list(labels).count(-1)
+    # count number of noise points (labels = -1)
 
     print('Estimated number of clusters: %d' % n_clusters_)
     print('Estimated number of noise points: %d' % n_noise_)
-    
+
     return labels
 
 
-
-
 def displayPointsSize(dictFunct, x, y):
-    
     """
     Displays the points passed as parameter as dots in a figure which dimensions can be controlled by the user. 
     The coordinates of the points are passed as parameter using a dictionary of 2D arrays. 
@@ -95,32 +90,29 @@ def displayPointsSize(dictFunct, x, y):
     Output: 
         Graphic display.
     """
-    
-    if len(dictFunct) == 1: #if only one figure to plot
-        
-        X = list(dictFunct.values())[0] # array in position 0 in the dictionary
-        plt.figure(figsize=(x,y)) # size of the figure (user input in call of function)
-        plt.plot(X[:, 0], X[:, 1], '.', markersize=1)
-        plt.title(list(dictFunct.keys())[0], fontsize=x) #title of figure => font size propotional to fig size
-        
-        
-    else: #if multiple figures to plot 
-        
-        for i in dictFunct.keys(): #i is the array for which we are tracing the histogramm
 
-            plt.figure(figsize=(x,y)) # size of the figure (user input in call of function)
-            
-            X = dictFunct[i] #i-eme array in dictionary 
+    if len(dictFunct) == 1:  # if only one figure to plot
+
+        X = list(dictFunct.values())[0]  # array in position 0 in the dictionary
+        plt.figure(figsize=(x, y))  # size of the figure (user input in call of function)
+        plt.plot(X[:, 0], X[:, 1], '.', markersize=1)
+        plt.title(list(dictFunct.keys())[0], fontsize=x)  # title of figure => font size propotional to fig size
+
+
+    else:  # if multiple figures to plot
+
+        for i in dictFunct.keys():  # i is the array for which we are tracing the histogramm
+
+            plt.figure(figsize=(x, y))  # size of the figure (user input in call of function)
+
+            X = dictFunct[i]  # i-eme array in dictionary
             plt.plot(X[:, 0], X[:, 1], '.', markersize=1)
-            plt.title(i, fontsize=x) #title of figure => font size propotional to fig size
-    
+            plt.title(i, fontsize=x)  # title of figure => font size propotional to fig size
+
     plt.show()
-    
-    
-    
+
 
 def displayPointsCentroids(dictFunct, dictCentroids, x, y, title):
-    
     """
     Displays the points passed as parameter in an array of x y coordinates for both the points and the centroids. 
     
@@ -141,50 +133,45 @@ def displayPointsCentroids(dictFunct, dictCentroids, x, y, title):
     Output:
         Graphic display.
     """
-    
-    if len(dictFunct) == 1:  #if only one figure to plot
-        
-        X = list(dictFunct.values())[0] #points to plot
-        C = list(dictCentroids.values())[0] #centroids for the points to plot 
-        plt.figure(figsize=(x,y))# array in position 0 in the dictionary
-        plt.plot(X[:, 0], X[:, 1], '.', markersize=2, label='points ' + list(dictFunct.keys())[0]) #points 
-        plt.plot(C[:, 0], C[:, 1], 'o', color='red', markersize=20, 
-                 markerfacecolor="none", markeredgewidth=3, 
-                 label='controids ' + list(dictCentroids.keys())[0]) #centroids
-        
-        plt.title(title[0], fontsize=x) 
-        #title of figure => font size propotional to fig size
+
+    if len(dictFunct) == 1:  # if only one figure to plot
+
+        X = list(dictFunct.values())[0]  # points to plot
+        C = list(dictCentroids.values())[0]  # centroids for the points to plot
+        plt.figure(figsize=(x, y))  # array in position 0 in the dictionary
+        plt.plot(X[:, 0], X[:, 1], '.', color='black', markersize=2, label='points ' + list(dictFunct.keys())[0])  # points
+        plt.plot(C[:, 0], C[:, 1], 'o', color='red', markersize=20,
+                 markerfacecolor="none", markeredgewidth=3,
+                 label='controids ' + list(dictCentroids.keys())[0])  # centroids
+
+        plt.title(title[0], fontsize=x)
+        # title of figure => font size propotional to fig size
         plt.legend(fontsize='x-large', loc='upper right')
 
-        
-        
-        
-    else: #if multiple figures to plot 
-        
-        for i in range(0, len(dictFunct)): #i is the array for which we are tracing the histogramm
-            X = dictFunct[list(dictFunct)[i]] #i-eme array in dictionary 
-            C = dictCentroids[list(dictCentroids)[i]] #i-eme array in dictionary 
-            
-            plt.figure(figsize=(x,y))# array in position 0 in the dictionary
 
-            plt.plot(X[:, 0], X[:, 1], '.', markersize=2, label='points ' + list(dictFunct.keys())[i]) #points
-            plt.plot(C[:, 0], C[:, 1], 'o', color='red', markersize=20, 
-                     markerfacecolor="none", markeredgewidth=3, 
-                     label='controids ' + list(dictCentroids.keys())[i]) #centroids 
-            
+
+
+    else:  # if multiple figures to plot
+
+        for i in range(0, len(dictFunct)):  # i is the array for which we are tracing the histogramm
+            X = dictFunct[list(dictFunct)[i]]  # i-eme array in dictionary
+            C = dictCentroids[list(dictCentroids)[i]]  # i-eme array in dictionary
+
+            plt.figure(figsize=(x, y))  # array in position 0 in the dictionary
+
+            plt.plot(X[:, 0], X[:, 1], '.', markersize=2, label='points ' + list(dictFunct.keys())[i])  # points
+            plt.plot(C[:, 0], C[:, 1], 'o', color='red', markersize=20,
+                     markerfacecolor="none", markeredgewidth=3,
+                     label='controids ' + list(dictCentroids.keys())[i])  # centroids
+
             plt.title(title[i], fontsize=x)
-            #title of figure => font size propotional to fig size
+            # title of figure => font size propotional to fig size
             plt.legend(fontsize='x-large', loc='upper right')
 
-
     plt.show()
-    
-    
-    
-    
-def displayHistFigure(dictFunct, rangeUp, binsize, path):
-    
-    
+
+
+def displayHistFigure(dictFunct, rangeUp, binsize, path, maxima_matrix_x):
     """
     Displays histograms for the data passed as parameter. All the histograms are displayed in the same figure. 
     The beginning and number of bins are calculated inside the code from the binsize and maximum value of the studied dataset. 
@@ -205,57 +192,88 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path):
         Display of histogram.
         PNG file.
     """
-    
-    plt.figure(figsize=(15,5)) # size of the figure 
-    
-    if len(dictFunct) == 1: #if one figure to plot 
-        
-        y, x, _ = plt.hist(list(dictFunct.values())[0], 
-                           bins=math.ceil(math.ceil(max(list(dictFunct.values())[0]))/binsize), 
-                           histtype='step', 
-                           range = (0, math.ceil(max(list(dictFunct.values())[0]))),
-                           label=list(dictFunct.keys())[0])
-        #the number of bins is the max value divided by the size of the bins (rounded up)
-        #the range insure that the bins have the same edges throughout the channels
-        #   it goes from 0 to the right edge of the last bin
-        #the label for each histogram is it's name in the dictionary
-        
-        xmax = x[np.argmax(y)] #x value for the highest bin (max occurence)
-        ymax = y.max() #y (number of occurences value for the highest bin
-        plt.annotate("x={:.3f}, y={:.3f}".format(xmax, ymax), xy=(xmax, ymax))        
-        
-    else: #if multiple figures to plot (in the same figure and same subplot)
-    
-        for i in dictFunct.keys(): #i is the array for which we are tracing the histogramm
 
-            y, x, _  = plt.hist(dictFunct[i], 
-                                bins=math.ceil(math.ceil(max(dictFunct[i]))/binsize), 
-                                histtype='step', 
-                                range = (0, math.ceil(max(dictFunct[i]))),
-                                label=i) 
-            #the number of bins is the max value divided by the size of the bins (rounded up)
-            #the range insure that the bins have the same edges throughout the channels
-            #   it goes from 0 to the right edge of the last bin
-            #the label for each histogram is it's name in the dictionary
-            
-            #print max x and count on the histogram 
-            xmax = x[np.argmax(y)] #x value for the highest bin (max occurence)
-            ymax = y.max() #y (number of occurences value for the highest bin
-            plt.annotate("x={:.3f}, y={:.3f}".format(xmax, ymax), xy=(xmax, ymax))
+    plt.figure(figsize=(15, 5))  # size of the figure
+
+    for i in dictFunct.keys():  # i is the array for which we are tracing the histogramm
+
+        y, x, _ = plt.hist(dictFunct[i],
+                           bins=math.ceil(math.ceil(max(dictFunct[i])) / binsize),
+                           histtype='step',
+                           range=(0, math.ceil(max(dictFunct[i]))),
+                           label=i)
+        # the number of bins is the max value divided by the size of the bins (rounded up)
+        # the range insure that the bins have the same edges throughout the channels
+        #   it goes from 0 to the right edge of the last bin
+        # the label for each histogram is it's name in the dictionary
+
+        # print max x and count on the histogram
+        xmax = x[np.argmax(y)]  # x value for the highest bin (max occurence)
+        ymax = y.max()  # y (number of occurences value for the highest bin
+
+        channel_x, channel_y = i.split('_in_')
+        channel_x = channel_x.split('distNN_')[-1]
+        maxima_matrix_x.loc[channel_x, channel_y] = xmax
+
+        plt.annotate("x={:.3f}, y={:.3f}".format(xmax, ymax), xy=(xmax, ymax))
 
     plt.legend(fontsize='x-large', loc='upper right')
     plt.xlabel('Distance to nearest neighbor (nm)')
     plt.ylabel('Count')
-    plt.xlim((0,rangeUp)) #x lim of the histogram display
-    
-    
-    plt.savefig(path+'.png') #save figure as png in specified path
+    plt.xlim((0, rangeUp))  # x lim of the histogram display
 
+    plt.savefig(path + '.png')  # save figure as png in specified path
+
+    return maxima_matrix_x
+
+
+def plot_matrix_histogram(matrix, path):
+
+    plt.figure(figsize=(10, 10))
     
+    matrix_np = matrix.to_numpy().astype(float)
+    original_matrix = np.copy(matrix_np)
+    
+    
+    min_val = np.min(matrix_np)
+    max_val = np.max(matrix_np)
+
+    # Set the diagonal elements to a value outside the range
+    np.fill_diagonal(matrix_np, max_val + 1)
+
+    # Define the colormap
+    cmap = plt.cm.coolwarm
+    colors = cmap(np.arange(cmap.N))
+
+    # Create new colormap with gray for the added value
+    colors = np.vstack((colors, [0.9, 0.9, 0.9, 1]))  # add a gray color level
+    new_cmap = ListedColormap(colors)
+
+    # Set color bounds for the original range and the added value
+    bounds = list(np.linspace(min_val, max_val, cmap.N)) + [max_val+1, max_val+2]
+
+    norm = BoundaryNorm(bounds, new_cmap.N)
+    fig, ax = plt.subplots(figsize=(10,10))
+
+    im = ax.imshow(matrix_np, cmap=new_cmap, norm=norm)
+    
+    for (j,i), val in np.ndenumerate(original_matrix):
+        if i == j: 
+            ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='black')
+        else: 
+            ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='w')
+            
+    
+    plt.xticks(np.arange(len(matrix.columns)), matrix.columns)
+    plt.yticks(np.arange(len(matrix.index)), matrix.index)
+    plt.colorbar(im, ax=ax, label=r'maximum of nN distances (nm)')
+    plt.tight_layout()
+    plt.savefig(os.path.join(path + '.png'))
+    plt.close()
+
 
 
 def calculateCentroids(labels, X):
-    
     """
     Calculates the centroids of identified clusters from the coordinates of the points and their DBSCAN labels.
     
@@ -269,25 +287,23 @@ def calculateCentroids(labels, X):
     Output:
         centroids: Coordinates of the centroids of the clusters in the studied channel (2D array, float).
     """
-    
-    unique_labels = set(labels) #different clusters labels found by DBSCAN clustering
-    
-    centroids = np.ones((len(unique_labels)-(1 if (-1 in unique_labels) == True else 0) , 2)) #create array of coordinates (2 columns) and (nb of clusters) lines
-    #if there are noise points, len = len-1 sice we do not count them as cluster
-    #else, stays len = len
 
-    for k in unique_labels: 
-        if k != -1: # labels = -1 means the point doesn't belong to a cluster (outlier) => no need for centroid
-            points_of_cluster = X[labels==k] # select point of one cluster
-            centroids[k] = np.mean(points_of_cluster, axis=0) # centroid of the selected cluster 
-    
-    return centroids # return the coordinates of the centroids of the clusters as an array
+    unique_labels = set(labels)  # different clusters labels found by DBSCAN clustering
+
+    centroids = np.ones((len(unique_labels) - (1 if (-1 in unique_labels) == True else 0),
+                         2))  # create array of coordinates (2 columns) and (nb of clusters) lines
+    # if there are noise points, len = len-1 sice we do not count them as cluster
+    # else, stays len = len
+
+    for k in unique_labels:
+        if k != -1:  # labels = -1 means the point doesn't belong to a cluster (outlier) => no need for centroid
+            points_of_cluster = X[labels == k]  # select point of one cluster
+            centroids[k] = np.mean(points_of_cluster, axis=0)  # centroid of the selected cluster
+
+    return centroids  # return the coordinates of the centroids of the clusters as an array
 
 
-
-
-def nearestNeighborsClean(X, Y): 
-    
+def nearestNeighborsClean(X, Y):
     """
     Searches for the nearest neighbour of each point in a dataset amongst the points of another dataset. 
     
@@ -304,21 +320,18 @@ def nearestNeighborsClean(X, Y):
         If the two datasets X and Y are the same, this function will return the second nearest 
             neighbours to each point, as the first neighbour would be the point itself.
     """
-    
-    nbrs = NearestNeighbors(n_neighbors=2, algorithm='auto').fit(X) #basic the array in which we search the NN
-    #neighbors=2 bcs neighbors=1 is just the point
-    distances, indices = nbrs.kneighbors(Y) #search the NN of the points in Y in X
-    
-    if np.array_equal(X,Y): #if the two arrays X and Y are the same
-        return distances[:, 1] #return the second column of distances (true NN and not 0 for point itself)
-    else: 
-        return distances[:, 0] #return first column, no problem
-    
-    
-    
 
-def nearestNeighborsMult(X,Y, nbNeighbors): 
-    
+    nbrs = NearestNeighbors(n_neighbors=2, algorithm='auto').fit(X)  # basic the array in which we search the NN
+    # neighbors=2 bcs neighbors=1 is just the point
+    distances, indices = nbrs.kneighbors(Y)  # search the NN of the points in Y in X
+
+    if np.array_equal(X, Y):  # if the two arrays X and Y are the same
+        return distances[:, 1]  # return the second column of distances (true NN and not 0 for point itself)
+    else:
+        return distances[:, 0]  # return first column, no problem
+
+
+def nearestNeighborsMult(X, Y, nbNeighbors):
     """
     Searches the selected number of nearest neighbours for each point in one dataset amongst the points of another dataset. 
     
@@ -336,23 +349,20 @@ def nearestNeighborsMult(X,Y, nbNeighbors):
             If the two datasets X and Y are the same, this function will return the second to nbNeighbours+1 
             nearest neighbours to each point, as the first neighbour would be the point itself.
     """
-    
-    nbrs = NearestNeighbors(n_neighbors=nbNeighbors+1, algorithm='auto').fit(X) 
-    #basic the array in which we search the NN
-    #neighbors=2 bcs neighbors=1 is just the point
-    distances, indices = nbrs.kneighbors(Y) #search the NN of the points in Y in X
-    
-    if np.array_equal(X,Y): #if the two arrays X and Y are the same
-        return distances[:, 1:nbNeighbors+1] 
-    #return the second column of distances (true NN and not 0 for point itself)
-    else: 
-        return distances[:, 0:nbNeighbors] #return first column, no problem        
-    
-    
+
+    nbrs = NearestNeighbors(n_neighbors=nbNeighbors + 1, algorithm='auto').fit(X)
+    # basic the array in which we search the NN
+    # neighbors=2 bcs neighbors=1 is just the point
+    distances, indices = nbrs.kneighbors(Y)  # search the NN of the points in Y in X
+
+    if np.array_equal(X, Y):  # if the two arrays X and Y are the same
+        return distances[:, 1:nbNeighbors + 1]
+        # return the second column of distances (true NN and not 0 for point itself)
+    else:
+        return distances[:, 0:nbNeighbors]  # return first column, no problem
 
 
-def nearestNeighborsOneInAll(dictPoints,dictLocs): 
-    
+def nearestNeighborsOneInAll(dictPoints, dictLocs):
     """
     Searches the first nearest neighbour of each point in one dataset amongst the points of the datasets 
     of another dictionary, sequentially for all the datasets of that dictionary. 
@@ -368,33 +378,30 @@ def nearestNeighborsOneInAll(dictPoints,dictLocs):
     Output:
         dictDist: Distance the nearest neighbours of each point of dictPoints in each array of dictLocs (dictionary of 1D array, float).
     """
-    
-    dictDist = {} #future dictionary of distances to NN for combinaisons of arrays 
-    
+
+    dictDist = {}  # future dictionary of distances to NN for combinaisons of arrays
+
     for i in dictLocs.keys():
-        
-        nbrs = NearestNeighbors(n_neighbors=2, algorithm='auto').fit(dictLocs[i]) 
-        #basic the array in which we search the NN
-        #neighbors=2 bcs neighbors=1 is just the point if we search in the same array 
-    
-        distances, indices = nbrs.kneighbors(list(dictPoints.values())[0]) 
-        #search the NN of the points in dictPoints inside ieme array of dictLocs
-        
+
+        nbrs = NearestNeighbors(n_neighbors=2, algorithm='auto').fit(dictLocs[i])
+        # basic the array in which we search the NN
+        # neighbors=2 bcs neighbors=1 is just the point if we search in the same array
+
+        distances, indices = nbrs.kneighbors(list(dictPoints.values())[0])
+        # search the NN of the points in dictPoints inside ieme array of dictLocs
+
         # WARNING : THE KEYS HAVE TO BE THE SAME IF THE ARRAYS ARE THE SAME
-        if list(dictPoints.keys())[0] == i: #if the two arrays X and Y are the same - by name
-            dictDist['distNN_'+list(dictPoints.keys())[0]+'_in_'+i] = distances[:, 1] 
-        #second column of distances (true NN and not 0 for point itself if same array)
-        else: 
-            dictDist['distNN_'+list(dictPoints.keys())[0]+'_in_'+i] = distances[:, 0] 
-        #first column, no problem
+        if list(dictPoints.keys())[0] == i:  # if the two arrays X and Y are the same - by name
+            dictDist['distNN_' + list(dictPoints.keys())[0] + '_in_' + i] = distances[:, 1]
+            # second column of distances (true NN and not 0 for point itself if same array)
+        else:
+            dictDist['distNN_' + list(dictPoints.keys())[0] + '_in_' + i] = distances[:, 0]
+            # first column, no problem
 
     return dictDist
 
 
-
-    
-def dictionaryToCsv(dictFunct, nameCsv): 
-    
+def dictionaryToCsv(dictFunct, nameCsv):
     """
     Converts a dictionary of arrays into a dataframe and then saves it as a unique CSV file. 
     To make this possible, the dimensions of the arrays are adjusted to the length of the longest one. 
@@ -411,22 +418,20 @@ def dictionaryToCsv(dictFunct, nameCsv):
     Output:
         CSV file.
     """
-    
+
     maxLength = max(len(dictFunct[i]) for i in dictFunct.keys())
     # length of the biggest array in the dictionary 
-    
-    dfDistances = pd.DataFrame()
-    
-    for i in dictFunct.keys():
-        #for each of the channels in the dictionary
-        dictFunct[i] = np.append(dictFunct[i], np.repeat(-1, maxLength-len(dictFunct[i])))
-        #add -1 distances to fill the empty spaces of the arrays => put everything to the same length
-        dfDistances.insert(len(dfDistances.columns), i, dictFunct[i])
-        #add to the dataframe
 
-    dfDistances.to_csv(nameCsv) #save dataframe as csv
-    
-    
+    dfDistances = pd.DataFrame()
+
+    for i in dictFunct.keys():
+        # for each of the channels in the dictionary
+        dictFunct[i] = np.append(dictFunct[i], np.repeat(-1, maxLength - len(dictFunct[i])))
+        # add -1 distances to fill the empty spaces of the arrays => put everything to the same length
+        dfDistances.insert(len(dfDistances.columns), i, dictFunct[i])
+        # add to the dataframe
+
+    dfDistances.to_csv(nameCsv)  # save dataframe as csv
 
 
 def alpha_shape(points, alpha, only_outer=True):
@@ -446,8 +451,9 @@ def alpha_shape(points, alpha, only_outer=True):
     
     the indices in the points array.
     """
-    
+
     assert points.shape[0] > 3, "Need at least four points"
+
     def add_edge(edges, i, j):
         """
         Add an edge between the i-th and j-th points,
@@ -461,6 +467,7 @@ def alpha_shape(points, alpha, only_outer=True):
                 edges.remove((j, i))
             return
         edges.add((i, j))
+
     tri = Delaunay(points)
     edges = set()
     # Loop over triangles:
@@ -484,9 +491,7 @@ def alpha_shape(points, alpha, only_outer=True):
     return edges
 
 
-
-
-def partOfYourWorld(x, y, indexEdges, points): 
+def partOfYourWorld(x, y, indexEdges, points):
     """
     Determinates if a point is inside or outside a predetermined shape. 
     The shape is delimited by the couples of points that make up its edges. 
@@ -503,44 +508,42 @@ def partOfYourWorld(x, y, indexEdges, points):
     Output: 
         Boolean value indicating if the point is inside or outside the shape. 
             The function returns TRUE if the point is inside the shape and FALSE if it is outside. 
-    """    
+    """
 
-    xEdgesInf = np.empty((50,2), int) ; inf = 0 #edges below the point (xaxis)
-    xEdgesSup = np.empty((50,2), int) ; sup = 0 #edges above the point (xaxis)
-    
-    for i, j in indexEdges: #for each segment composing the edge
-        
-        #x axis
+    xEdgesInf = np.empty((50, 2), int);
+    inf = 0  # edges below the point (xaxis)
+    xEdgesSup = np.empty((50, 2), int);
+    sup = 0  # edges above the point (xaxis)
+
+    for i, j in indexEdges:  # for each segment composing the edge
+
+        # x axis
         if min(points[i, 0], points[j, 0]) <= x < max(points[i, 0], points[j, 0]):
-            #if the point is between the two ends of the segment
+            # if the point is between the two ends of the segment
             if stat.mean([points[i, 1], points[j, 1]]) <= y:
-                #if the point is below the segment (yaxis)
+                # if the point is below the segment (yaxis)
                 xEdgesInf[inf] = [i, j]
-                #add the segemnt to the array of segments below the point (xaxis)
-                inf = inf+1
+                # add the segemnt to the array of segments below the point (xaxis)
+                inf = inf + 1
             else:
                 xEdgesSup[inf] = [i, j]
                 # = above = 
-                sup = sup+1
-  
+                sup = sup + 1
+
     xEdgesInf = np.delete(xEdgesInf, np.s_[inf:len(xEdgesInf)], 0)
     xEdgesSup = np.delete(xEdgesSup, np.s_[inf:len(xEdgesSup)], 0)
 
-    
-    if ((len(xEdgesInf)%2 == 0) or (len(xEdgesSup)%2 == 0)):
-        #if there is an even number of edges on any side of the point
-        #then the point is outside the cell
+    if ((len(xEdgesInf) % 2 == 0) or (len(xEdgesSup) % 2 == 0)):
+        # if there is an even number of edges on any side of the point
+        # then the point is outside the cell
         return False
     else:
-        #if there is an odd number of edges on all sides of the point
-        #then it is inside the cell 
+        # if there is an odd number of edges on all sides of the point
+        # then it is inside the cell
         return True
-        
-
 
 
 def randomPartOfYourWorld(indexEdges, points):
-    
     """
     Draws a pool of random points between the minimum and maximum coordinates of points in the experimental dataset for both axes. 
     For every each of the points, it checks if the point is inside the shape and keep it if it is. 
@@ -565,60 +568,54 @@ def randomPartOfYourWorld(indexEdges, points):
             Except error in the number of points drawn, there will be the same number of random points than experimental points. 
         Text display if an error occurred in the number of random points originally drawn.
     """
-    
-    #parameters for random.randrange => ranges for coordinates of random point
-    xmin = math.ceil(min(points[:, 0])) ; xmax = math.ceil(max(points[:, 0]))
-    ymin = math.ceil(min(points[:, 1])) ; ymax = math.ceil(max(points[:, 1]))
 
-    #empty array for the random points inside the cell 
-    randomPoints = np.empty((len(points),2), float)
-    
-    
-    
-    
-    #random draws outside the loop to reduce running time (a bit)
-    
-    factorExpRandPoints = 4    
-    
-    hold = np.empty((len(points)*factorExpRandPoints, 2), float)
+    # parameters for random.randrange => ranges for coordinates of random point
+    xmin = math.ceil(min(points[:, 0]));
+    xmax = math.ceil(max(points[:, 0]))
+    ymin = math.ceil(min(points[:, 1]));
+    ymax = math.ceil(max(points[:, 1]))
+
+    # empty array for the random points inside the cell
+    randomPoints = np.empty((len(points), 2), float)
+
+    # random draws outside the loop to reduce running time (a bit)
+
+    factorExpRandPoints = 4
+
+    hold = np.empty((len(points) * factorExpRandPoints, 2), float)
     for i in range(0, len(hold)):
-        hold[i] = [random.randrange(xmin*100, xmax*100)/100, 
-                random.randrange(ymin*100, ymax*100)/100]
-        
-    
+        hold[i] = [random.randrange(xmin * 100, xmax * 100) / 100,
+                   random.randrange(ymin * 100, ymax * 100) / 100]
+
     # checks if the points are inside or outside the shape
-    
+
     count = -1
-    
-    for i in tqdm(range(0, len(points))): 
-    
+
+    for i in tqdm(range(0, len(points))):
+
         valBool = False
-        #hold = np.empty((0,2), float)
-    
+        # hold = np.empty((0,2), float)
+
         while valBool != True:
-            
-            count = count+1
-            
-            valBool = partOfYourWorld(hold[count,0], hold[count,1], indexEdges, points)
-            #valBool = True if the point is inside the cell
-        
-        randomPoints[i] = [hold[count,0], hold[count,1]]
-        #add the point to the array of random points inside the cell 
-        
-        if count == len(hold)-1: 
+            count = count + 1
+
+            valBool = partOfYourWorld(hold[count, 0], hold[count, 1], indexEdges, points)
+            # valBool = True if the point is inside the cell
+
+        randomPoints[i] = [hold[count, 0], hold[count, 1]]
+        # add the point to the array of random points inside the cell
+
+        if count == len(hold) - 1:
             print('not enough random points initially drawn')
             print('count of random points inside the shape : %d / %d' % (i, len(points)))
             break
-        
-        continue
-            
-    return randomPoints
-    
 
+        continue
+
+    return randomPoints
 
 
 def randomDistributionAll(points, alphaParameter):
-    
     """
     Calculates the alpha shape for the points of an experimental dataset. 
     
@@ -636,32 +633,28 @@ def randomDistributionAll(points, alphaParameter):
             Except error in the number of points drawn, there will be the same number of random points than experimental points. 
         Text display if an error occurred in the number of random points originally drawn.
     """
-    
-    edges = alpha_shape(points, alpha=alphaParameter, only_outer=True) #alphaParameter = 700 is nice for now 
-    indexEdges = np.array(list(edges)) #convertion of edges from list to np array
-    
+
+    edges = alpha_shape(points, alpha=alphaParameter, only_outer=True)  # alphaParameter = 700 is nice for now
+    indexEdges = np.array(list(edges))  # convertion of edges from list to np array
+
     randomPoints = randomPartOfYourWorld(indexEdges, points)
-    #array of random points inside a cell, the number of random and experimental points is equal
-    
-    #display figure with : 
-        #edges of experimetal cell for the alphaParameter
-        #random points generated 
-    plt.figure(figsize=(50,50))
+    # array of random points inside a cell, the number of random and experimental points is equal
+
+    # display figure with :
+    # edges of experimetal cell for the alphaParameter
+    # random points generated
+    plt.figure(figsize=(50, 50))
     plt.plot(randomPoints[:, 0], randomPoints[:, 1], '.')
     for i, j in edges:
         plt.plot(points[[i, j], 0], points[[i, j], 1], color='black')
     plt.show()
-    
+
     return randomPoints
 
 
-
-
 def ripleyParametersForClustering(array, cuts, path):
-    
     """
     Calculates the radius of clusters for a maximal clustering using Ripley’s H function. 
-    The final value is the mean of the results for each of the areas passed as parameters with cuts. 
     The results of Ripley’s H function for the study areas are displayed in a unique figure for each of the channels to cluster.
     
     The function also calculates the minimum number of points in clusters for the radius of maximal clustering. 
@@ -682,72 +675,69 @@ def ripleyParametersForClustering(array, cuts, path):
         stat.mean(nb): Mean number of neighbours for points in each of the areas for the radius of maximum clustering.
         Graphic display (Ripley’s H functions graph).
     """
-    
+
     radius = []
     nb = []
-    
-    #radii to test for ripley's function
+
+    # radii to test for ripley's function
     r = np.linspace(0, 400, 800)
-    
-    plt.figure(figsize=(15,5))
+
+    plt.figure(figsize=(15, 5))
     plt.plot(r, np.zeros(len(r)), '--', color='red')
-    
-    #for each of the areas defined in cuts
+
+    # for each of the areas defined in cuts
     for i, j in tqdm(cuts):
-   
-        #points of the array in the area (1500x1500 nm)
-        dataTest = array[(array[:,0] >= i) & (array[:,0] <= i+1500) & 
-                         (array[:,1] >= j) & (array[:,1] <= j+1500)]
-    
-        #definition of the study area parameter for ripley's function
-        x_minTest = min(dataTest[:,0]); x_maxTest = max(dataTest[:,0])
-        y_minTest = min(dataTest[:,1]); y_maxTest = max(dataTest[:,1])
-        areaTest = (x_maxTest - x_minTest)*(y_maxTest - y_minTest)
-            
+
+        # points of the array in the area (1500x1500 nm)
+        dataTest = array[(array[:, 0] >= i) & (array[:, 0] <= i + 1500) &
+                         (array[:, 1] >= j) & (array[:, 1] <= j + 1500)]
+
+        # definition of the study area parameter for ripley's function
+        x_minTest = min(dataTest[:, 0]);
+        x_maxTest = max(dataTest[:, 0])
+        y_minTest = min(dataTest[:, 1]);
+        y_maxTest = max(dataTest[:, 1])
+        areaTest = (x_maxTest - x_minTest) * (y_maxTest - y_minTest)
+
         if areaTest > 0:
-        
-            #implementing ripley's H function
+
+            # implementing ripley's H function
             R = RipleysKEstimator(areaTest, x_maxTest, y_maxTest, x_minTest, y_minTest)
-            ripleyH = R.Hfunction(data = dataTest, radii = r, mode='none')
-            
-            #the max of ripley's H function is the cluster radius of maximum clustering
+            ripleyH = R.Hfunction(data=dataTest, radii=r, mode='none')
+
+            # the max of ripley's H function is the cluster radius of maximum clustering
             # = radius of clusters for DBSCAN
-            if np.argmax(ripleyH)>0: #if clustered (clusterd if ripley's H above 0)
-                
+            if np.argmax(ripleyH) > 0:  # if clustered (clusterd if ripley's H above 0)
+
                 radius = np.append(radius, r[np.argmax(ripleyH)])
-            
+
                 # nb = np.append(radius, math.ceil(stat.median(spat.cKDTree(dataTest).query_ball_point(dataTest, r = r[np.argmax(ripleyH)], return_length=True))))
-                nb = np.append(nb, math.ceil(stat.mean(spat.cKDTree(dataTest).query_ball_point(dataTest, r = r[np.argmax(ripleyH)], return_length=True))))
+                nb = np.append(nb, math.ceil(stat.mean(
+                    spat.cKDTree(dataTest).query_ball_point(dataTest, r=r[np.argmax(ripleyH)], return_length=True))))
                 # the min number of points is the median of the number of neighbors
                 # calculated for each poit of the channel      
-                    
-            
-            plt.plot(r, ripleyH, label='Ripley H, study area ' + str(len(radius)))        
-            
-            
+
+            plt.plot(r, ripleyH, label='Ripley H, study area ' + str(len(radius)))
+
         continue
-    
+
     plt.legend(fontsize='large', loc='upper right')
     plt.xlabel('Radius (nm)')
     plt.ylabel('Ripley H')
-    plt.savefig(path+'.png') #save figure as png in specified path    
-    
-    
-    if len(radius)>0:
-        if len(nb)>0:
+    plt.savefig(path + '.png')  # save figure as png in specified path
+
+    if len(radius) > 0:
+        if len(nb) > 0:
             return stat.mean(radius), stat.mean(nb)
         else:
             return stat.mean(radius), 0
-    elif len(nb)>0: 
+    elif len(nb) > 0:
         return 0, stat.mean(nb)
-    else: 
+    else:
         return 0, 0
 
 
-
-
 def MultChannelsCallToDict(path, dictionaryNames):
-    
     """
     Imports the CSV files in path and makes an array from the coordinates in each file. 
     These arrays are added to a shared dictionary regrouping the coordinates of points for all imported channels. 
@@ -763,41 +753,37 @@ def MultChannelsCallToDict(path, dictionaryNames):
     Output:
         dictionaryLocalizations: Coordinates of points for each channel in path (dictionary of 2D arrays, float).
     """
-    
-    # array of all csv files in this folder (path to the files)
-    filePaths = np.array(glob.glob(path+'/*.csv'))
 
-    #new empty dictionary of localizations 
+    # array of all csv files in this folder (path to the files)
+    filePaths = np.array(glob.glob(path + '/*.csv'))
+
+    # new empty dictionary of localizations
     dictionaryLocalizations = {}
 
     for i in filePaths:
-        #names of the files only (without extention or path)
+        # names of the files only (without extention or path)
         name = Path(i).stem
-        
+
         namePath = Path(i).stem
-        
-        #import locations (csv)
+
+        # import locations (csv)
         df = pd.read_csv(i)
-        #coordinates of points only => in a np array
-        df = df[['x [nm]','y [nm]']].to_numpy()
-        
-        #search for recognisable part in name of the dict and makes new names accordingly
-        #names of lectins and state of randomness
+        # coordinates of points only => in a np array
+        df = df[['x [nm]', 'y [nm]']].to_numpy()
+
+        # search for recognisable part in name of the dict and makes new names accordingly
+        # names of lectins and state of randomness
         for i in dictionaryNames.keys():
             if namePath.casefold().find(i) >= 0:
                 if namePath.casefold().find('random') >= 0:
-                    name = dictionaryNames[i]+'random' 
+                    name = dictionaryNames[i] + 'random'
                 else:
                     name = dictionaryNames[i]
-                    
-                if namePath.casefold().find('centroid') >= 0:
-                    name = name + '_centroids' 
 
-        #add arry to dictionary of localizations 
+                if namePath.casefold().find('centroid') >= 0:
+                    name = name + '_centroids'
+
+                    # add arry to dictionary of localizations
         dictionaryLocalizations[name] = df
-        
+
     return dictionaryLocalizations
-        
-        
-        
-      
