@@ -787,3 +787,60 @@ def MultChannelsCallToDict(path, dictionaryNames):
         dictionaryLocalizations[name] = df
 
     return dictionaryLocalizations
+
+def MultChannelsCallToDict_hdf5(path, dictionaryNames, keiy):
+    """
+    imports localization files with hdf5
+
+    Parameters
+    ----------
+    path : TYPE
+        DESCRIPTION.
+    key : TYPE
+        DESCRIPTION.
+    dictionaryNames : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    filePaths = np.array(glob.glob(path+'/*.hdf5'))
+    print(filePaths)
+    
+    #new empty dictionary of localizations 
+    dictionaryLocalizations = {}
+    
+    for i in filePaths:
+        #names of the files only (without extention or path)
+        name = Path(i).stem
+        
+        namePath = Path(i).stem
+        
+        df = pd.read_hdf(i, key=keiy)
+        
+        df = df[['x','y']].to_numpy()*130
+        
+        
+        #search for recognisable part in name of the dict and makes new names accordingly
+        #names of lectins and state of randomness
+        for i in dictionaryNames.keys():
+            if namePath.casefold().find(i) >= 0:
+                if namePath.casefold().find('random') >= 0:
+                    name = dictionaryNames[i]+'random' 
+                else:
+                    name = dictionaryNames[i]
+                    
+                if namePath.casefold().find('centroid') >= 0:
+                    name = name + '_centroids' 
+
+        #add arry to dictionary of localizations 
+        dictionaryLocalizations[name] = df
+        
+    return dictionaryLocalizations
+
+        
+        
+      
