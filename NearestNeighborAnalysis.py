@@ -13,7 +13,6 @@ from pathlib import Path
 import datetime
 import numpy as np
 import pandas as pd
-import cmasher as cmr
 
 import functionsAll as funct
 
@@ -30,7 +29,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r'G:\2024-09-23_Don3_P1_NK_P13_A549\FOV2\CELL2_NK'
+pathLocsPoints = r"C:\Users\dmoonnu\Desktop\Test"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -59,17 +58,20 @@ binsizeSameChannel = 0.2  # bin size
 rangeUpCrossChannel = 1000  # maximum display x axis
 binsizeCrossChannel = 0.2  # binsize
 
-# %% import localizations for all six channels
+
+    
+#%% import from hdf5
 
 # makes 1 dictionary of arrays for the localizations of the points of all the channels
-dictionaryLocalizationsPoints = funct.MultChannelsCallToDict(pathLocsPoints, dictionaryNames)
+dictionaryLocalizationsPoints = funct.MultChannelsCallToDict_hdf5(pathLocsPoints, dictionaryNames, "locs")
 
 # if the paths are the same, there is no need to import the files again 
 if pathLocsNeighbors == pathLocsPoints:
     dictionaryLocalizationsNeighbors = dict(dictionaryLocalizationsPoints)
 
 else:
-    dictionaryLocalizationsNeighbors = funct.MultChannelsCallToDict(pathLocsNeighbors, dictionaryNames)
+    dictionaryLocalizationsNeighbors = funct.MultChannelsCallToDict_hdf5(pathLocsNeighbors, dictionaryNames, "locs")
+
 
 # %% new folder for analysis data
 
