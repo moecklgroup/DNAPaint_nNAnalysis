@@ -29,7 +29,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\Test"
+pathLocsPoints = r'G:\2024-09-23_Don3_P1_NK_P13_A549\FOV2\CELL1_A549_clustered'
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -46,16 +46,18 @@ dictionaryNames = {'wga': 'R1WGA',
                    'aal': 'R4AAL',
                    'psa': 'R5PSA'}
 
+orderedNames = list(dictionaryNames.values())
+
 # =============================================================================
 # histogram parameters
 # =============================================================================
 
 # histogram distances points to nearest neighbors in same channel
-rangeUpSameChannel = 1000  # maximum display x axis
+rangeUpSameChannel = 10  # maximum display x axis
 binsizeSameChannel = 0.2  # bin size
 
 # histogram distances points to nearest neighbors in different channel
-rangeUpCrossChannel = 1000  # maximum display x axis
+rangeUpCrossChannel = 2000  # maximum display x axis
 binsizeCrossChannel = 0.2  # binsize
 
 
@@ -144,6 +146,9 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
         nameFIG = nameFIG + 'random'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0:
         nameFIG = nameFIG + '_centroids'
+        
+    # reorder the matrix
+    maxima_x = maxima_x.loc[orderedNames, orderedNames]
 
     # display hist of distance to NN for channel i in all others
     maxima_x = funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if
