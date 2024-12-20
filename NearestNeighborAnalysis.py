@@ -29,7 +29,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r'G:\2024-09-23_Don3_P1_NK_P13_A549\FOV2\CELL1_A549_clustered'
+pathLocsPoints = r'G:\2024-08-21-NK-P1-Pat2-Multiplex-Lectins\FOV1\Playground'
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -53,12 +53,12 @@ orderedNames = list(dictionaryNames.values())
 # =============================================================================
 
 # histogram distances points to nearest neighbors in same channel
-rangeUpSameChannel = 10  # maximum display x axis
-binsizeSameChannel = 0.2  # bin size
+rangeUpSameChannel = 400  # maximum display x axis
+binsizeSameChannel = 2  # bin size
 
 # histogram distances points to nearest neighbors in different channel
-rangeUpCrossChannel = 2000  # maximum display x axis
-binsizeCrossChannel = 0.2  # binsize
+rangeUpCrossChannel = 300  # maximum display x axis
+binsizeCrossChannel = 2  # binsize
 
 
     

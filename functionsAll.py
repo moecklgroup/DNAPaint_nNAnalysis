@@ -238,30 +238,20 @@ def plot_matrix_histogram(matrix, path):
     min_val = np.min(matrix_np)
     max_val = np.max(matrix_np)
 
-    # Set the diagonal elements to a value outside the range
-    np.fill_diagonal(matrix_np, max_val + 1)
-
     # Define the colormap
     cmap = plt.cm.coolwarm
     colors = cmap(np.arange(cmap.N))
 
-    # Create new colormap with gray for the added value
-    colors = np.vstack((colors, [0.9, 0.9, 0.9, 1]))  # add a gray color level
-    new_cmap = ListedColormap(colors)
-
     # Set color bounds for the original range and the added value
-    bounds = list(np.linspace(min_val, max_val, cmap.N)) + [max_val+1, max_val+2]
+    bounds = list(np.linspace(min_val, max_val, cmap.N)) 
 
-    norm = BoundaryNorm(bounds, new_cmap.N)
+    norm = BoundaryNorm(bounds, cmap.N)
     fig, ax = plt.subplots(figsize=(10,10))
 
-    im = ax.imshow(matrix_np, cmap=new_cmap, norm=norm)
+    im = ax.imshow(matrix_np, cmap=cmap, norm=norm)
     
     for (j,i), val in np.ndenumerate(original_matrix):
-        if i == j: 
-            ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='black')
-        else: 
-            ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='w')
+         ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='w')
             
     
     plt.xticks(np.arange(len(matrix.columns)), matrix.columns)

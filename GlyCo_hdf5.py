@@ -22,7 +22,7 @@ from datetime import datetime
 
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
 radius = 5
-localization_folder = Path(r"F:\2024-10-11_MCF10A_DBCO_Lectin_Pannel_DS030\FOV1\PAINT\Cell2\Clustering with Global NeNA\cENTERS")
+localization_folder = Path(r'G:\2024-08-21-NK-P1-Pat2-Multiplex-Lectins\FOV1\CELL2_clusterCenters')
 number_to_plot =5 #top x to plot
 #%%HDF5 handling
 
@@ -238,10 +238,20 @@ for standard_tup in tqdm(possible_combinations, desc= "Counting Classes"):
     # Convert the current tuple to a set
     standard_tup_set = sorted(standard_tup)
     # Count occurrences in the tuple_list
+    #for tup in result_list: print(tup)
     count = sum(1 for tup in result_list if sorted(tup) == standard_tup_set)
+    #i=0
+    #for tup in result_list:
+    #    print(tup)
+    #    i += 1
+    #    if (i > 10):
+    #        break
     # Update the result dictionary
+    #print(count)
     class_counter[standard_tup] = count
-
+    #if len(standard_tup) > 2:
+    #    break
+    
 #%%Plotting class distribution
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 #sorting in the reverse order and picking th etop 10 class
@@ -262,7 +272,7 @@ plt.ylabel('Counts', fontsize=10)
 plt.xticks(rotation=45, ha='right')
 
 # Show the plot
-plt.show()   
+#plt.show()   
 plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius}nm",bbox_inches='tight')        
         
 #%%Save classes to json file
@@ -337,7 +347,10 @@ for (key, coords), color in zip(data_to_plot, colors):
     plt.scatter(x_vals, y_vals, label=str(key), color=color, s=4)  # Scatter plot
 
 # Set axis limits to match the full field of view
-plt.xlim(0, field_of_view)  # 0 to 74.88 µm
+#plt.xlim(0, field_of_view)  # 0 to 74.88 µm
+#plt.ylim(0, field_of_view)  # 0 to 74.88 µm
+
+plt.xlim(0, 700*scale_factor)  # 0 to 74.88 µm
 plt.ylim(0, field_of_view)  # 0 to 74.88 µm
 
 # Invert the y-axis to set the origin at the top-left
@@ -351,7 +364,7 @@ plt.title(f"Top {number_to_plot} classes")
 plt.grid(True)
 
 # Show the plot
-plt.show()
+#plt.show()
 plt.savefig(localization_folder/f"{timestamp}_Class location {radius}nm",bbox_inches='tight') 
             
                         
