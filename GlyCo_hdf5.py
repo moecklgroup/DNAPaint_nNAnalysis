@@ -17,13 +17,19 @@ from collections import Counter
 from matplotlib import pyplot as plt
 import json
 from datetime import datetime
+import matplotlib
+# Set the graphics backend to Qt
+matplotlib.use('Qt5Agg')
+
 
 
 
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
 radius = 5
-localization_folder = Path(r'G:\2024-08-21-NK-P1-Pat2-Multiplex-Lectins\FOV1\CELL2_clusterCenters')
+localization_folder = Path(r"G:\2024-09-05_MCF10AT+TGFB_MPLEX_Lectin_DS024\FOV_2\PAINT\Cell3\NeNA Clustered\Centers")
 number_to_plot =5 #top x to plot
+area_of_cell = 962.5
+
 #%%HDF5 handling
 
 
@@ -238,43 +244,63 @@ for standard_tup in tqdm(possible_combinations, desc= "Counting Classes"):
     # Convert the current tuple to a set
     standard_tup_set = sorted(standard_tup)
     # Count occurrences in the tuple_list
-    #for tup in result_list: print(tup)
     count = sum(1 for tup in result_list if sorted(tup) == standard_tup_set)
-    #i=0
-    #for tup in result_list:
-    #    print(tup)
-    #    i += 1
-    #    if (i > 10):
-    #        break
     # Update the result dictionary
-    #print(count)
     class_counter[standard_tup] = count
-    #if len(standard_tup) > 2:
-    #    break
-    
+
 #%%Plotting class distribution
+
+# timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+# #sorting in the reverse order and picking th etop 10 class
+# sorted_data = sorted(class_counter.items(), key=lambda clas: clas[1], reverse=True)[:10] 
+# sorted_data = [(tuple(sorted(tup[0])), tup[1]) for tup in sorted_data]
+# categories_ = [str(item[0]) for item in sorted_data]
+# values_ = [item[1]/area_of_cell for item in sorted_data]
+# #categories_ = [str(key) for key in class_counter.keys()]
+# #values_ = list(class_counter.values())
+# plt.figure(figsize=(8, 10))
+# # Plot the histogram
+# plt.bar(categories_, values_, color='red', edgecolor='black')
+
+# # Add titles and labels
+# plt.title('Lectin Classes', fontsize=13)
+# plt.xlabel('Categories', fontsize=10)
+# plt.ylabel('Count per μm\u00b2', fontsize=10)
+# plt.xticks(rotation=45, ha='right')
+
+# # Show the plot
+# plt.show()   
+# plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius}nm",bbox_inches='tight')        
+
+
+#%%Plotting class distribution  with normalization
+
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 #sorting in the reverse order and picking th etop 10 class
 sorted_data = sorted(class_counter.items(), key=lambda clas: clas[1], reverse=True)[:10] 
+#Sorting the lectin classes
 sorted_data = [(tuple(sorted(tup[0])), tup[1]) for tup in sorted_data]
+#Fetching the list of categories
 categories_ = [str(item[0]) for item in sorted_data]
-values_ = [item[1] for item in sorted_data]
-#categories_ = [str(key) for key in class_counter.keys()]
-#values_ = list(class_counter.values())
+#Scaling with
+area_normalized_values = [item[1] / area_of_cell for item in sorted_data]
+
+# Apply min-max normalization
+min_value = min(area_normalized_values)
+max_value = max(area_normalized_values)
+final_normalized_values = [(value - min_value) / (max_value - min_value) for value in area_normalized_values]
+
+categories_ = [str(item[0]) for item in sorted_data]
 plt.figure(figsize=(8, 10))
-# Plot the histogram
-plt.bar(categories_, values_, color='red', edgecolor='black')
-
-# Add titles and labels
-plt.title('Lectin Classes', fontsize=13)
-plt.xlabel('Categories', fontsize=10)
-plt.ylabel('Counts', fontsize=10)
+plt.bar(categories_, final_normalized_values, color='blue', edgecolor='black')
 plt.xticks(rotation=45, ha='right')
+plt.xlabel('Categories', fontsize=10)
+plt.ylabel('Normalized Count per μm\u00b2', fontsize=10)
+plt.title('Lectin Classes normalized distribution', fontsize=13)
+plt.show()
 
-# Show the plot
-#plt.show()   
-plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius}nm",bbox_inches='tight')        
-        
+plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius}nm Normalized",bbox_inches='tight')   
+     
 #%%Save classes to json file
 
 
@@ -347,10 +373,7 @@ for (key, coords), color in zip(data_to_plot, colors):
     plt.scatter(x_vals, y_vals, label=str(key), color=color, s=4)  # Scatter plot
 
 # Set axis limits to match the full field of view
-#plt.xlim(0, field_of_view)  # 0 to 74.88 µm
-#plt.ylim(0, field_of_view)  # 0 to 74.88 µm
-
-plt.xlim(0, 700*scale_factor)  # 0 to 74.88 µm
+plt.xlim(0, field_of_view)  # 0 to 74.88 µm
 plt.ylim(0, field_of_view)  # 0 to 74.88 µm
 
 # Invert the y-axis to set the origin at the top-left
@@ -364,7 +387,7 @@ plt.title(f"Top {number_to_plot} classes")
 plt.grid(True)
 
 # Show the plot
-#plt.show()
+plt.show()
 plt.savefig(localization_folder/f"{timestamp}_Class location {radius}nm",bbox_inches='tight') 
             
                         
