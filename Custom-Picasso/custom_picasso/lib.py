@@ -18,7 +18,7 @@ from numpy.lib.recfunctions import stack_arrays as _stack_arrays
 import collections as _collections
 import glob as _glob
 import os.path as _ospath
-from picasso import io as _io
+from custom_picasso import io as _io
 from PyQt5 import QtCore, QtWidgets
 
 # A global variable where we store all open progress and status dialogs.
