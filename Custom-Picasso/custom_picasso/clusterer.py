@@ -105,7 +105,7 @@ def _frame_analysis(frame, n_frames):
     #     or (max_locs_bin > 0.8 * n_locs)
     # ):
     if (
-    (max_locs_bin > 0.8 * n_locs)
+    (max_locs_bin > 0.9 * n_locs)
     ):
          passed = 0
 
