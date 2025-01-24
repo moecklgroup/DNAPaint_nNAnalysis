@@ -53,8 +53,11 @@ for file in locs_file:
     #clustering
     clustered_locs=clusterer.cluster(locs, radius_xy, min_locs, frame_analysis)
     new_info = {"Number of Clusters": len(np.unique(clustered_locs.group)),
+                "Number of Clustered Locs": len(clustered_locs),
                 "Min. cluster size": min_locs,
                 "Performed basic frame analysis": frame_analysis,
+                "Percentage parameter for BFA": "90%",
+                "Number of bins for BFA": 100,
                 "Clustering radius xy (nm)": float(radius_xy * pixelsize),
                 "NeNA precision(nm)": float(nena[1]*130),
                 "Basic Frame analysis status": "First and last inclusive, 100bins used",
