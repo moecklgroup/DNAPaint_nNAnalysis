@@ -27,7 +27,7 @@ key_for_area = "Total Picked Area (um^2)"
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
 radius = 5
 number_to_plot =5 #tp x to plot
-pathLocsPoints = r"G:\2024-07-17_MCF10A_Lectin_DS019\well3\FOV1\Cell2\Custom Centers"
+pathLocsPoints = r"G:\2024-07-17_MCF10A_Lectin_DS019\well3\FOV1\Cell1\Custom Centers"
 localization_folder = Path(pathLocsPoints)
 
 yaml_file = (list(localization_folder.glob("*.yaml")))[0]
@@ -427,8 +427,6 @@ import functionsAll as funct
 # and pathLocsNeighbors = pathLocsPoints
 # =============================================================================
 
-# path to the csv files of the points in search of neigbors
-pathLocsPoints = r"G:\2024-07-17_MCF10A_Lectin_DS019\well3\FOV1\Cell2\Custom Centers"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
