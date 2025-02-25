@@ -29,7 +29,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA\MCF10AT+TGFb\Cell5"
+pathLocsPoints = r"C:\Users\sfritsc\Desktop\Custom Centers_MCF10AT"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -40,11 +40,11 @@ pathLocsNeighbors = pathLocsPoints
 # to update when new lectins are used 
 # =============================================================================
 
-dictionaryNames = {'wga': 'R1WGA',
-                   'sna': 'R2SNA',
-                   'phal': 'R3PHAL',
-                   'aal': 'R4AAL',
-                   'psa': 'R5PSA'}
+dictionaryNames = {'wga': 'WGA',
+                   'sna': 'SNA',
+                   'phal': 'PHAL',
+                   'aal': 'AAL',
+                   'psa': 'PSA'}
 
 orderedNames = list(dictionaryNames.values())
 

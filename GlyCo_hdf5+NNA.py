@@ -14,9 +14,12 @@ from custom_picasso import postprocess, io
 from custom_picasso import clusterer
 import numpy as np
 import os 
+import matplotlib.pyplot as plt
 from pathlib import Path
 from tqdm import tqdm
 import json
+
+plt.rcParams["axes.grid"] = False
 
 #%% Fetching info from the parameter file
 variables_from_parameter = {}
@@ -539,11 +542,11 @@ pathLocsNeighbors = pathLocsPoints
 # to update when new lectins are used 
 # =============================================================================
 
-dictionaryNames = {'wga': 'R1WGA',
-                   'sna': 'R2SNA',
-                   'phal': 'R3PHAL',
-                   'aal': 'R4AAL',
-                   'psa': 'R5PSA'}
+dictionaryNames = {'wga': 'WGA',
+                   'sna': 'SNA',
+                   'phal': 'PHAL',
+                   'aal': 'AAL',
+                   'psa': 'PSA'}
 
 orderedNames = list(dictionaryNames.values())
 

@@ -252,6 +252,8 @@ def plot_matrix_histogram(matrix, path):
 
     im = ax.imshow(matrix_np, cmap=cmap, norm=norm)
     
+    #ax.grid(False)
+    
     for (j,i), val in np.ndenumerate(original_matrix):
          ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='w')
             
@@ -424,6 +426,38 @@ def dictionaryToCsv(dictFunct, nameCsv):
         # add to the dataframe
 
     dfDistances.to_csv(nameCsv)  # save dataframe as csv
+    
+    
+def dictionaryToHdf5(inputDict, savePath, dictionaryNames):
+    """
+    Saves localization data (numpy arrays) to hdf5 files
+
+    Parameters
+    ----------
+    inputDict: The dictionary of localization data as numpy arrays
+    savePath: The path to save hdf5 files
+    dictionaryNames: The dictionary of names to label the hdf5 files
+    """
+
+    for key, value in inputDict.items():
+        name = ""
+
+        # Apply naming scheme based on dictionaryNames
+        for i in dictionaryNames.keys():
+            if key.casefold().find(i) >= 0:
+                #if key.casefold().find('random') >= 0:
+                #    name = dictionaryNames[i]+'random' 
+                #else:
+                name = dictionaryNames[i]
+
+                #if key.casefold().find('centroid') >= 0:
+                #    name = name + '_centroids'
+       
+        # Reverse transform of the to_numpy()*130 
+        df = pd.DataFrame(value/130, columns=['x', 'y'])
+
+        # Save the dataframe to hdf5 at savePath
+        df.to_hdf(savePath, key='locs', mode='w')
 
 
 def alpha_shape(points, alpha, only_outer=True):

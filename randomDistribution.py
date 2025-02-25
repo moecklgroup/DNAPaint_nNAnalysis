@@ -26,7 +26,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points to cluster
-pathLocsPoints = '5_colors_csv/2024-07-17_MCF10A_Lectin_DS019/well2/Cell1'
+pathLocsPoints = r"C:\Users\sfritsc\Desktop\Custom Centers_MCF10AT\Random_Pointshdf5"
 
 
 
@@ -37,11 +37,11 @@ pathLocsPoints = '5_colors_csv/2024-07-17_MCF10A_Lectin_DS019/well2/Cell1'
 # to update when new lectins are used 
 # =============================================================================
 
-dictionaryNames = {'wga':'R1WGA',  
-                   'sna':'R2SNA', 
-                   'phal':'R3PHAL', 
-                   'aal':'R4AAL', 
-                   'psa':'R5PSA'}
+dictionaryNames = {'wga':'WGA',  
+                   'sna':'SNA', 
+                   'phal':'PHAL', 
+                   'aal':'AAL', 
+                   'psa':'PSA'}
 
 
 
@@ -51,7 +51,7 @@ dictionaryNames = {'wga':'R1WGA',
 
 
 # makes 1 dictionary of arrays for the localizations of the points of all the channels
-dictionaryLocalizations = funct.MultChannelsCallToDict(pathLocsPoints, dictionaryNames)
+dictionaryLocalizations = funct.MultChannelsCallToDict_hdf5(pathLocsPoints, dictionaryNames, "locs")
 
 
 
@@ -85,15 +85,14 @@ for i in dictionaryLocalizations.keys():
     fileName = i + '_random'
     
     #calculate the nearest neighbor for every point in that channel in all the others including itself
-    randomLocs[i+'random'] = funct.randomDistributionAll(dictionaryLocalizations[i], 700) #700
+    randomLocs[i] = funct.randomDistributionAll(dictionaryLocalizations[i], 1000) #700
     
     #save to csv 
-    funct.dictionaryToCsv({'x [nm]':(randomLocs[i+'random'])[:,0], 
-                           'y [nm]':(randomLocs[i+'random'])[:,1]}, 
-                          pathNewFolder + '/' + fileName + '.csv')   
+    #funct.dictionaryToHdf5({'x [nm]':(randomLocs[i])[:,0], 
+    #                       'y [nm]':(randomLocs[i])[:,1]}, 
+    #                       pathNewFolder + '/' + fileName + '.csv')   
 
-
-
-
-
+    
+    #save to hdf5
+    funct.dictionaryToHdf5({'locs': randomLocs[i]}, pathNewFolder + '/' + fileName + '.hdf5', dictionaryNames)   
 
