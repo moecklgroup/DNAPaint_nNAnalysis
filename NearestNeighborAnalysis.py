@@ -29,7 +29,7 @@ import functionsAll as funct
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"G:\2024-07-17_MCF10A_Lectin_DS019\well3\FOV1\Cell2\Custom Centers"
+pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA\MCF10AT+TGFb\Cell5"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 

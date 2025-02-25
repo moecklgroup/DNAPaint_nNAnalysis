@@ -25,7 +25,7 @@ import glob
 #import cmasher as cmr
 import os
 from matplotlib.colors import ListedColormap, BoundaryNorm
-
+import json
 import scipy.spatial as spat
 
 SAVEFORMAT='png'
@@ -192,9 +192,9 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path, maxima_matrix_x):
         Display of histogram.
         PNG file.
     """
-
+    output_file_path = path + "_peaks.json"
     plt.figure(figsize=(15, 5))  # size of the figure
-
+    dict_of_peaks ={}
     for i in dictFunct.keys():  # i is the array for which we are tracing the histogramm
 
         y, x, _ = plt.hist(dictFunct[i],
@@ -210,11 +210,11 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path, maxima_matrix_x):
         # print max x and count on the histogram
         xmax = x[np.argmax(y)]  # x value for the highest bin (max occurence)
         ymax = y.max()  # y (number of occurences value for the highest bin
-
+        peak = x[np.argmax(y)] 
         channel_x, channel_y = i.split('_in_')
         channel_x = channel_x.split('distNN_')[-1]
         maxima_matrix_x.loc[channel_x, channel_y] = xmax
-
+        dict_of_peaks[f"{channel_x},{channel_y}"] = peak
         plt.annotate("x={:.3f}, y={:.3f}".format(xmax, ymax), xy=(xmax, ymax))
 
     plt.legend(fontsize='x-large', loc='upper right')
@@ -223,7 +223,9 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path, maxima_matrix_x):
     plt.xlim((0, rangeUp))  # x lim of the histogram display
 
     plt.savefig(path + '.png')  # save figure as png in specified path
-
+    with open(output_file_path, 'w') as json_file:
+        json.dump(dict_of_peaks, json_file, indent=4)
+    
     return maxima_matrix_x
 
 

@@ -5,9 +5,97 @@ This code is intended to cluster the multidimensional super resolution data with
 in a folder with the filenames starting with the corresponding lectin followed by underscores. (eg: "AAL_cluster_centers").
 This folder should be given as the input in the variable "localization folder". Also set the radius. The outputs are multidimensional 
 cluster information as a joson file, bar chart of the top classes, and the scatter plot of top x class location.  
+
+Codes are supposed to be run at the level of a single cell. ie. Folder containing cluster centers of individual cells
 @author: dmoonnu
 """
 
+from custom_picasso import postprocess, io
+from custom_picasso import clusterer
+import numpy as np
+import os 
+from pathlib import Path
+from tqdm import tqdm
+import json
+
+#%% Fetching info from the parameter file
+variables_from_parameter = {}
+with open("parameter_file.json", "r", encoding="utf-8") as f:
+    variables_from_parameter = json.load(f)
+
+# get the values from the dictionary
+localization_folder = Path(variables_from_parameter.get('localization_folder'))
+number = variables_from_parameter.get('number')
+secondnumber = variables_from_parameter.get('second_number')
+
+#%%
+#User Inputs
+pixelsize =130
+min_locs =1
+frame_analysis = True
+#Nena Factor for clustering
+xnena = 2
+
+locs_file = []
+for hdf5 in localization_folder.glob('*.hdf5'):
+    locs_file.append(str(hdf5))
+    
+    
+#%%
+#Adjust the path to the localization hdf5 file
+cluster_data_location= localization_folder/"90_Custom SMLM Clustered"
+cluster_data_location.mkdir(exist_ok=True)
+centers_location =localization_folder/"90_Custom Centers"
+centers_location.mkdir(exist_ok=True)
+for file in locs_file:
+    #locs_path = file
+    #fetch data fromthe file
+    locs, info = io.load_locs(file)
+    #Calculate NeNA Precision
+    nena= postprocess.nena(locs, info)
+    
+    #Assign radius
+    radius_xy = xnena*nena[1]
+    print(f"Clustering radius = {radius_xy*pixelsize}nm")
+    
+    #Strings for creating new filename
+    directory, filename = os.path.split(file)
+    name, extension = os.path.splitext(filename)
+    suffix= f"min_loc-{min_locs}_{xnena}XNeNA"
+    
+    output_name = f"{name}_clustered_{suffix}{extension}"
+    output_name_centers = f"{name}_centers_{suffix}{extension}"
+    
+    
+    #clustering
+    clustered_locs=clusterer.cluster(locs, radius_xy, min_locs, frame_analysis)
+    new_info = {"Number of Clusters": len(np.unique(clustered_locs.group)),
+                "Number of Clustered Locs": len(clustered_locs),
+                "Min. cluster size": min_locs,
+                "Performed basic frame analysis": frame_analysis,
+                "Percentage parameter for BFA": "90%",
+                "Number of bins for BFA": 100,
+                "Clustering radius xy (nm)": float(radius_xy * pixelsize),
+                "NeNA precision(nm)": float(nena[1]*130),
+                "Basic Frame analysis status": "First and last inclusive, 100bins used",
+                "Percentage of localization clustered": (len(clustered_locs)/len(locs))*100
+            }
+    info = info + [new_info]
+    outputpath_locs = os.path.join(str(cluster_data_location), output_name)
+    io.save_locs(outputpath_locs, clustered_locs, info)
+    print("Calculating Centers...")
+    cluster_centers = clusterer.find_cluster_centers(clustered_locs,130)
+    outputpath_centers = os.path.join(str(centers_location), output_name_centers)
+    io.save_locs(outputpath_centers, cluster_centers, info)
+    
+
+#%%Deleting the current variable
+
+for var in list(globals().keys()):
+    if var not in ["variables_from_parameter","centers_location", "__builtins__", "__name__", "__doc__", "__package__"]:
+        del globals()[var]
+
+#%%
 import numpy as np
 from pathlib import Path
 import pandas as pd
@@ -25,9 +113,11 @@ matplotlib.use('Qt5Agg')
 #kEY TO LOOK IN THE YAML FILE
 key_for_area = "Total Picked Area (um^2)"
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
-radius = 5
+radius_for_glyco = 5
 number_to_plot =5 #tp x to plot
-pathLocsPoints = r"G:\2024-07-17_MCF10A_Lectin_DS019\well3\FOV1\Cell1\Custom Centers"
+#Connecting the file location from render
+pathLocsPoints = str(centers_location)
+#Converting it to path obj as glyco needs it as path
 localization_folder = Path(pathLocsPoints)
 
 yaml_file = (list(localization_folder.glob("*.yaml")))[0]
@@ -88,9 +178,9 @@ for df_key in data_dict:
         # Check for neighbors in all other DataFrames using their KDTree
         for current_family, current_family_members in trees.items():
             #Generates a list of indices coresponding to the dataframe 
-            indices = current_family_members.query_ball_point([x1, y1], r=radius)
+            indices = current_family_members.query_ball_point([x1, y1], r=radius_for_glyco)
             filtered_indices = [num for num in indices if df_key != current_family and num != row_index_of_com]
-            #indices = current_family_members.query_ball_point([x1, y1], r=radius) if df_key==current_family and 
+            #indices = current_family_members.query_ball_point([x1, y1], r=radius_for_glyco) if df_key==current_family and 
             # if len(indices)>2: 
             #     print(f"{df_key}_{row_index_of_com}--{current_family}-{indices}")
             #If indices exist ie. if neighbors exist for the current point from the main loop, these neighbors are stored to a dictionary with the 'id' of the point from main
@@ -278,7 +368,7 @@ for standard_tup in tqdm(possible_combinations, desc= "Counting Classes"):
 
 # # Show the plot
 # plt.show()   
-# plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius}nm",bbox_inches='tight')        
+# plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius_for_glyco}nm",bbox_inches='tight')        
 
 
 #%%Plotting class distribution  with normalization
@@ -294,32 +384,41 @@ categories_ = [str(item[0]) for item in sorted_data]
 area_normalized_values = [item[1] / area_of_cell for item in sorted_data]
 
 # Apply min-max normalization
-min_value = min(area_normalized_values)
-max_value = max(area_normalized_values)
-final_normalized_values = [(value - min_value) / (max_value - min_value) for value in area_normalized_values]
+# min_value = min(area_normalized_values)
+# max_value = max(area_normalized_values)
+# final_normalized_values = [(value - min_value) / (max_value - min_value) for value in area_normalized_values]
 
 categories_ = [str(item[0]) for item in sorted_data]
 plt.figure(figsize=(8, 10))
-plt.bar(categories_, final_normalized_values, color='blue', edgecolor='black')
+plt.bar(categories_, area_normalized_values, color='blue', edgecolor='black')
 plt.xticks(rotation=45, ha='right')
 plt.xlabel('Categories', fontsize=10)
-plt.ylabel('Normalized Count per μm\u00b2', fontsize=10)
-plt.title('Lectin Classes normalized distribution', fontsize=13)
+plt.ylabel('Count per μm\u00b2', fontsize=10)
+plt.title('Lectin Classes distribution', fontsize=13)
 plt.show()
 
-plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius}nm Normalized",bbox_inches='tight')   
+plt.savefig(localization_folder/f"{timestamp}_Lectin_Classes_ per_sq-microns_{radius_for_glyco}nm",bbox_inches='tight')   
      
 #%%Save classes to json file
 
-
-output_file_path = localization_folder / f"{timestamp}_Lectin_Classes_{radius}nm.json"
+# Save class counts
+output_file_path = localization_folder / f"{timestamp}_Number_of_Lectin_Classes_{radius_for_glyco}nm.json"
 
 sorted_counter = dict(sorted(class_counter.items(), key=lambda item: item[1], reverse=True))
-data_str_keys = {str(key): value for key, value in sorted_counter.items()}
+num_classes = {str(key): value for key, value in sorted_counter.items()}
 
 # Save to a JSON file
 with open(output_file_path, 'w') as json_file:
-    json.dump(data_str_keys, json_file, indent=4)
+    json.dump(num_classes, json_file, indent=4)
+#Save Class count per unit area   
+PCA_output_file_path = localization_folder / f"{timestamp}_Lectin_Classes_ per_sq-microns_for_PCA_{radius_for_glyco}nm.json"
+
+sorted_counter = dict(sorted(class_counter.items(), key=lambda item: item[1], reverse=True))
+class_per_area = {str(key): value/area_of_cell for key, value in sorted_counter.items()}
+
+# Save to a JSON file
+with open(PCA_output_file_path, 'w') as json_file:
+    json.dump(class_per_area, json_file, indent=4)
     
     
 #%%
@@ -346,7 +445,7 @@ for classes in tqdm(sorted_data, desc="Finding location of the classes "):
          
             location_dictionary[class_looking_for_location].append((x_val, y_val))
             
-#%%Plot the classes
+#%%Plot the class locations
 
 # Define pixel size in nanometers
 pixel_size_nm = 130  # 130 nanometers per pixel
@@ -396,12 +495,14 @@ plt.grid(True)
 
 # Show the plot
 plt.show()
-plt.savefig(localization_folder/f"{timestamp}_Class location {radius}nm",bbox_inches='tight') 
+plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius_for_glyco}nm",bbox_inches='tight') 
+plt.close("all")
+
 
 #%%Deleting the current variable
 
 for var in list(globals().keys()):
-    if var not in ["pathLocsPoints", "__builtins__", "__name__", "__doc__", "__package__"]:
+    if var not in ["variables_from_parameter","pathLocsPoints", "__builtins__", "__name__", "__doc__", "__package__"]:
         del globals()[var]
           
 #%%# %% imports
@@ -412,8 +513,9 @@ from pathlib import Path
 import datetime
 import numpy as np
 import pandas as pd
-
+from matplotlib import pyplot as plt
 import functionsAll as funct
+import json
 
 # %% paths and name dictionary
 
@@ -567,8 +669,8 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
 
 print(maxima_x)
 
-nameFigMatrix = timenow + 'nN_matrix'
-funct.plot_matrix_histogram(maxima_x, path=pathNewFolder + '/' + nameFigMatrix)
+#nameFigMatrix = timenow + 'nN_matrix'
+funct.plot_matrix_histogram(maxima_x, path=pathNewFolder + '/' + timenow + 'nN_matrix')
 
 # save analysis parameters in txt file
 
@@ -592,16 +694,20 @@ outfile.write('Range histogram cross channel : 0-' + str(rangeUpCrossChannel) + 
 outfile.write('bin size histogram cross channel : ' + str(binsizeCrossChannel) + ' (nm) \n\n')
 
 outfile.close()  # Close the file when done
-                    
-                
-            
-      
-    
+
+plt.close("all")
 
 
+#%%Combine the NN distance histogram peaks to a single file
 
+keyword = "peaks"
+pathNewFolder = Path(pathNewFolder)
+peaks_combined_output_file = pathNewFolder / "Peaks_Combined.json"
+combined_data = {}
+for file in pathNewFolder.rglob(f"*{keyword}.json"):
+    with file.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+        combined_data.update(data)
 
-
-
-
-
+# Write the combined data to a single JSON file
+peaks_combined_output_file.write_text(json.dumps(combined_data, indent=4), encoding="utf-8")

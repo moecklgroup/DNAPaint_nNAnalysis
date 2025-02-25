@@ -4,7 +4,7 @@ Created on Mon Sep 30 09:26:13 2024
 This code is intended to cluster the multidimensional super resolution data within a given radius. Localization data(cluster centers) should be saved
 in a folder with the filenames starting with the corresponding lectin followed by underscores. (eg: "AAL_cluster_centers").
 This folder should be given as the input in the variable "localization folder". Also set the radius. The outputs are multidimensional 
-cluster information as a joson file, bar chart of the top classes, and the scatter plot of top x class location.  
+cluster information as a json file, bar chart of the top classes, and the scatter plot of top x class location.  
 @author: dmoonnu
 """
 
@@ -27,7 +27,7 @@ key_for_area = "Total Picked Area (um^2)"
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
 radius = 5
 number_to_plot =5 #tp x to plot
-pathLocsPoints = r"G:\2024-07-17_MCF10A_Lectin_DS019\well3\FOV1\Cell2\Custom Centers"
+pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA\MCF10A\Cell7"
 localization_folder = Path(pathLocsPoints)
 
 yaml_file = (list(localization_folder.glob("*.yaml")))[0]
@@ -294,32 +294,41 @@ categories_ = [str(item[0]) for item in sorted_data]
 area_normalized_values = [item[1] / area_of_cell for item in sorted_data]
 
 # Apply min-max normalization
-min_value = min(area_normalized_values)
-max_value = max(area_normalized_values)
-final_normalized_values = [(value - min_value) / (max_value - min_value) for value in area_normalized_values]
+# min_value = min(area_normalized_values)
+# max_value = max(area_normalized_values)
+# final_normalized_values = [(value - min_value) / (max_value - min_value) for value in area_normalized_values]
 
 categories_ = [str(item[0]) for item in sorted_data]
 plt.figure(figsize=(8, 10))
-plt.bar(categories_, final_normalized_values, color='blue', edgecolor='black')
+plt.bar(categories_, area_normalized_values, color='blue', edgecolor='black')
 plt.xticks(rotation=45, ha='right')
 plt.xlabel('Categories', fontsize=10)
-plt.ylabel('Normalized Count per μm\u00b2', fontsize=10)
-plt.title('Lectin Classes normalized distribution', fontsize=13)
+plt.ylabel('Count per μm\u00b2', fontsize=10)
+plt.title('Lectin Classes distribution', fontsize=13)
 plt.show()
 
-plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius}nm Normalized",bbox_inches='tight')   
+plt.savefig(localization_folder/f"{timestamp}_Lectin_Classes_ per_sq-microns_{radius}nm",bbox_inches='tight')   
      
 #%%Save classes to json file
 
-
-output_file_path = localization_folder / f"{timestamp}_Lectin_Classes_{radius}nm.json"
+# Save class counts
+output_file_path = localization_folder / f"{timestamp}_Number_of_Lectin_Classes_{radius}nm.json"
 
 sorted_counter = dict(sorted(class_counter.items(), key=lambda item: item[1], reverse=True))
-data_str_keys = {str(key): value for key, value in sorted_counter.items()}
+num_classes = {str(key): value for key, value in sorted_counter.items()}
 
 # Save to a JSON file
 with open(output_file_path, 'w') as json_file:
-    json.dump(data_str_keys, json_file, indent=4)
+    json.dump(num_classes, json_file, indent=4)
+#Save Class count per unit area   
+PCA_output_file_path = localization_folder / f"{timestamp}_Lectin_Classes_ per_sq-microns_for_PCA_{radius}nm.json"
+
+sorted_counter = dict(sorted(class_counter.items(), key=lambda item: item[1], reverse=True))
+class_per_area = {str(key): value/area_of_cell for key, value in sorted_counter.items()}
+
+# Save to a JSON file
+with open(PCA_output_file_path, 'w') as json_file:
+    json.dump(class_per_area, json_file, indent=4)
     
     
 #%%
@@ -346,7 +355,7 @@ for classes in tqdm(sorted_data, desc="Finding location of the classes "):
          
             location_dictionary[class_looking_for_location].append((x_val, y_val))
             
-#%%Plot the classes
+#%%Plot the class locations
 
 # Define pixel size in nanometers
 pixel_size_nm = 130  # 130 nanometers per pixel
@@ -396,23 +405,16 @@ plt.grid(True)
 
 # Show the plot
 plt.show()
-plt.savefig(localization_folder/f"{timestamp}_Class location {radius}nm",bbox_inches='tight') 
+plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius}nm",bbox_inches='tight') 
 
-#%%Deleting the current variable
-
-for var in list(globals().keys()):
-    if var not in ["pathLocsPoints", "__builtins__", "__name__", "__doc__", "__package__"]:
-        del globals()[var]
-          
-#%%                    
-                
+      
             
       
     
 
 
 
-
+plt.close("all")
 
 
 

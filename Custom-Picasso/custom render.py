@@ -17,7 +17,8 @@ min_locs =1
 frame_analysis = True
 #Nena Factor for clustering
 xnena = 2
-localization_folder = Path(r"G:\2024-07-17_MCF10A_Lectin_DS019\well3\FOV1\Cell1\Custom Centers")
+
+localization_folder = Path(r"F:\2024-10-17_Tissue_Section_DS031\FOV2\PAINT\GOLD REMOVED\ROI2")
 
 locs_file = []
 for hdf5 in localization_folder.glob('*.hdf5'):
@@ -26,9 +27,9 @@ for hdf5 in localization_folder.glob('*.hdf5'):
     
 #%%
 #Adjust the path to the localization hdf5 file
-cluster_data_location= localization_folder/"Custom SMLM Clustered"
+cluster_data_location= localization_folder/"90_Custom SMLM Clustered"
 cluster_data_location.mkdir(exist_ok=True)
-centers_location =localization_folder/"Custom Centers"
+centers_location =localization_folder/"90_Custom Centers"
 centers_location.mkdir(exist_ok=True)
 for file in locs_file:
     #locs_path = file
