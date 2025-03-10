@@ -13,7 +13,33 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib
+import numpy as np
 matplotlib.use('Qt5Agg')
+plt.rcParams['font.family'] = 'arial'
+
+label_font_size = 10
+title_font_size = 10
+tick_font_size = 10
+FIGFORMAT = 'pdf'
+
+
+
+folders = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat"
+#folder_names = ["Regular", "Tumor"] 
+folder_names = ["MCF10A", "MCF10AT","MCF10A+TGFb","MCF10AT+TGFb"]
+#folder_names = ["Body", "Dendrons"] 
+
+# USe keyword="PCA" for GlyCO and "Peaks_Combined" for NN peaks
+keyword="PCA"
+number_of_characters_to_consider = 15
+#Number of axe to use in PCA
+pca_axes = 3
+#Boolean to decide whether to save or not
+save = False
+#orientation of the 3d plot [elevation,azimuth]
+threed_view =[-167,87]
+
+
 
 def find_json_files(base_dirs, keyword):
     """
@@ -33,9 +59,9 @@ def find_json_files(base_dirs, keyword):
 
     """
     json_files = []
-    for base_dir in base_dirs:
-        for path in Path(base_dir).rglob(f"*{keyword}*.json"):
-            json_files.append(path)
+
+    for path in Path(base_dirs).rglob(f"*{keyword}*.json"):
+        json_files.append(path)
     return json_files
 
 def normalize_dataframe(df):
@@ -58,7 +84,7 @@ def normalize_dataframe(df):
     
     return df
 
-def perform_pca(df, n_components=3):
+def perform_pca(df, n_components):
     numerical_cols = df.select_dtypes(include=['number']).columns
     pca = PCA(n_components=n_components)
     pca_components = pca.fit_transform(df[numerical_cols])
@@ -103,9 +129,14 @@ def extract_key_value_pairs(json_files, folder_names,pca_axes):
     # Normalize numerical columns using global min and max
     df = normalize_dataframe(df)
     df = df.fillna(0)
-    # Apply PCA and reduce dimensionality to 2 components (or change as needed)
+    if keyword == "PCA":
+        selected_cols = df.columns[:number_of_characters_to_consider].tolist()    
+        # # Add the last_col at the end of cropped dataframe
+        column_to_keep = "Cell Type"
+        selected_cols.append(column_to_keep)
+        df = df[selected_cols]
+    #Apply PCA and reduce dimensionality to 2 components (or change as needed)
     df, pca = perform_pca(df, n_components=pca_axes)
-    
     if pca_axes==2:
         plot_pca(df)
     elif pca_axes==3:
@@ -118,38 +149,69 @@ def extract_key_value_pairs(json_files, folder_names,pca_axes):
 
 
 def plot_pca_3d(df):
-    fig = plt.figure(figsize=(10, 7))
+    fig = plt.figure(figsize=(3.75, 3.75))
     ax = fig.add_subplot(111, projection='3d')
 
     unique_sources = df["Cell Type"].unique()
     for source in unique_sources:
         source_data = df[df["Cell Type"] == source]
         ax.scatter(source_data["PC1"], source_data["PC2"], source_data["PC3"], label=source, s=100, alpha=0.7)
-
-    ax.set_title('3D PCA Plot')
-    ax.set_xlabel('PC 1')
-    ax.set_ylabel('PC 2')
-    ax.set_zlabel('PC 3')
-    ax.legend(title="Cell Type")
+    if keyword == "PCA":
+        fig_suffix = "GlyCO"
+    elif keyword == "Peaks_Combined":
+        fig_suffix= "NN Peaks"
+    ax.set_title(f'3D PCA Plot of {fig_suffix}', fontsize = title_font_size)
+    ax.set_xlabel('PC 1', fontsize = label_font_size)
+    ax.set_ylabel('PC 2', fontsize = label_font_size)
+    ax.set_zlabel('PC 3', fontsize = label_font_size)
+    pca_legend = ax.legend(title="Cell Type", fontsize = 'medium')
+    pca_legend.get_title().set_fontsize(f'{label_font_size}')
+    xstart, xend = ax.get_xlim()
+    ystart, yend = ax.get_ylim()
+    zstart, zend = ax.get_zlim()
+    ax.xaxis.set_ticks(np.arange(xstart, xend,0.2))
+    ax.yaxis.set_ticks(np.arange(ystart, yend,0.2))
+    ax.zaxis.set_ticks(np.arange(zstart, zend,0.2))    
     
+    
+    
+    #plt.xticks(labels="", fontsize = tick_font_size)
+    # plt.yticks(fontsize=tick_font_size)
+    ax.tick_params('x', labelsize=tick_font_size, labelbottom=False)
+    ax.tick_params('z', labelsize=tick_font_size, labelleft=False)
+    ax.tick_params('y', labelsize=tick_font_size, labelleft=False)
+    # ax.tick_params('y', labelsize=tick_font_size, labelright=False)
+    # ax.tick_params('y', labelsize=tick_font_size, labeltop=False)
+    ax.view_init(elev=threed_view[0], azim=threed_view[1])  # Adjust orientation before saving
     plt.show()
-
+    if save:
+        plt.savefig(Path(folders)/f"PCA 3d {fig_suffix}.{FIGFORMAT}", bbox_inches="tight")
+    
 
 
 def plot_pca(df):
     # Plotting the PCA results (PC1 vs PC2)
+    
     plt.figure(figsize=(10, 6))
     sns.scatterplot(data=df, x="PC1", y="PC2", hue="Cell Type", palette="Set1", s=100, alpha=0.7)
 
-
+    if keyword == "PCA":
+        fig_suffix = "GlyCO"
+    elif keyword == "Peaks_Combined":
+        fig_suffix= "NN Peaks"
     # Add labels and title
-    plt.title('PCA: PC1 vs PC2')
-    plt.xlabel('PC 1')
-    plt.ylabel('PC 2')
+    plt.title(f"PCA Plot of {fig_suffix}", fontsize=title_font_size)
+    plt.xlabel('PC 1', fontsize = label_font_size)
+    plt.ylabel('PC 2', fontsize = label_font_size)
 
     # Show the plot
-    plt.legend(title="Cell Type")
+    pca_legend = plt.legend(title="Cell Type",fontsize='x-large')
+    pca_legend.get_title().set_fontsize(f'{label_font_size}')
+    plt.xticks(fontsize = tick_font_size)
+    plt.yticks(fontsize=tick_font_size)
     plt.show()
+    if save:
+        plt.savefig(Path(folders)/f"PCA 2d {fig_suffix}.{FIGFORMAT}", bbox_inches="tight")
     
 def plot_scree(pca_model):
     # Plotting the Scree Plot
@@ -170,15 +232,11 @@ def plot_scree(pca_model):
     plt.show()
 
 def main():
-    # List of folders to search in (update with actual folder paths)
-    folders = [r"C:\Users\dmoonnu\Desktop\PCA"]
-    folder_names = ["MCF10A", "MCF10AT","MCF10A+TGFb","MCF10AT+TGFb"]  # List of known folder names
-    
-   
-    json_files = find_json_files(folders, "PCA")
+
+    json_files = find_json_files(folders, keyword)
     
     # Extract and process the data
-    result_df, pca_model = extract_key_value_pairs(json_files, folder_names,3)
+    result_df, pca_model = extract_key_value_pairs(json_files, folder_names,pca_axes)
     
     
     return result_df 
