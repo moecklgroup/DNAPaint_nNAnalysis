@@ -269,7 +269,7 @@ def plot_matrix_histogram(matrix, path):
     #ax.grid(False)
     
     for (j,i), val in np.ndenumerate(original_matrix):
-         ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='k', fontsize = 10)
+         ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='k', fontsize = 8.5)
             
     
     plt.xticks(np.arange(len(matrix.columns)), matrix.columns, fontsize = 10, rotation=45)

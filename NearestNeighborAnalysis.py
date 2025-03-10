@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 import functionsAll as funct
+import json
 plt.rcParams["axes.grid"] = False
 
 funct.save= True
@@ -34,7 +35,7 @@ funct.annotate = False
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\Tissue\Regular\Non Tumor Full Area 2"
+pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat\MCF10A\Cell1"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -49,7 +50,8 @@ dictionaryNames = {'wga': 'WGA',
                    'sna': 'SNA',
                    'phal': 'PHAL',
                    'aal': 'AAL',
-                   'psa': 'PSA'}
+                   'psa': 'PSA',
+                   'dbco': 'DBCO'}
 
 orderedNames = list(dictionaryNames.values())
 
@@ -200,4 +202,19 @@ outfile.write('Range histogram cross channel : 0-' + str(rangeUpCrossChannel) + 
 outfile.write('bin size histogram cross channel : ' + str(binsizeCrossChannel) + ' (nm) \n\n')
 
 outfile.close()  # Close the file when done
-#plt.close('all')
+plt.close('all')
+
+#%%Combine the NN distance histogram peaks to a single file
+
+keyword = "peaks"
+pathNewFolder = Path(pathNewFolder)
+peaks_combined_output_file = pathNewFolder.parent / "Peaks_Combined.json"
+combined_data = {}
+for file in pathNewFolder.rglob(f"*{keyword}.json"):
+    with file.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+        combined_data.update(data)
+
+# Write the combined data to a single JSON file
+peaks_combined_output_file.write_text(json.dumps(combined_data, indent=4), encoding="utf-8")
+

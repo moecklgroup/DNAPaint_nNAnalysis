@@ -164,7 +164,7 @@ def plot_pca_3d(df):
     ax.set_xlabel('PC 1', fontsize = label_font_size)
     ax.set_ylabel('PC 2', fontsize = label_font_size)
     ax.set_zlabel('PC 3', fontsize = label_font_size)
-    pca_legend = ax.legend(title="Cell Type", fontsize = 'medium')
+    pca_legend = ax.legend(title="Cell Type", fontsize = 'medium',loc="lower left")
     pca_legend.get_title().set_fontsize(f'{label_font_size}')
     xstart, xend = ax.get_xlim()
     ystart, yend = ax.get_ylim()
