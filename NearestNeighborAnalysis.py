@@ -13,8 +13,13 @@ from pathlib import Path
 import datetime
 import numpy as np
 import pandas as pd
-
+from matplotlib import pyplot as plt
 import functionsAll as funct
+plt.rcParams["axes.grid"] = False
+
+funct.save= True
+#Choose if you want to annotate the peaks of histogram
+funct.annotate = False
 
 # %% paths and name dictionary
 
@@ -22,14 +27,14 @@ import functionsAll as funct
 # =============================================================================
 # paths to the csv files to analyse
 # 
-# if the csv files ares the same for the points in search of a neighbor 
+# if the csv files ares the same for the points in search of a neig
 # and those that make up the pool of potential neighbors, 
 # then pathLocsPoints = 'path/to/folder'
 # and pathLocsNeighbors = pathLocsPoints
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"C:\Users\sfritsc\Desktop\Custom Centers_MCF10AT"
+pathLocsPoints = r"C:\Users\dmoonnu\Desktop\Tissue\Regular\Non Tumor Full Area 2"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -195,3 +200,4 @@ outfile.write('Range histogram cross channel : 0-' + str(rangeUpCrossChannel) + 
 outfile.write('bin size histogram cross channel : ' + str(binsizeCrossChannel) + ' (nm) \n\n')
 
 outfile.close()  # Close the file when done
+#plt.close('all')

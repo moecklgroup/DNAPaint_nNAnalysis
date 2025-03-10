@@ -19,6 +19,14 @@ import json
 from datetime import datetime
 import matplotlib
 import yaml
+plt.rcParams["axes.grid"] = False
+plt.rcParams['font.family'] = 'arial'
+save = True
+label_font_size = 10
+title_font_size = 10
+tick_font_size = 10
+FIGFORMAT = 'pdf'
+
 
 # Set the graphics backend to Qt
 matplotlib.use('Qt5Agg')
@@ -27,7 +35,7 @@ key_for_area = "Total Picked Area (um^2)"
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
 radius = 5
 number_to_plot =5 #tp x to plot
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA\MCF10A\Cell7"
+pathLocsPoints = r"E:\2025-01-14_DNS006_MPZPM\FOV2\PAINT\CELL1\Custom Centers"
 localization_folder = Path(pathLocsPoints)
 
 yaml_file = (list(localization_folder.glob("*.yaml")))[0]
@@ -297,38 +305,46 @@ area_normalized_values = [item[1] / area_of_cell for item in sorted_data]
 # min_value = min(area_normalized_values)
 # max_value = max(area_normalized_values)
 # final_normalized_values = [(value - min_value) / (max_value - min_value) for value in area_normalized_values]
+#%%
 
 categories_ = [str(item[0]) for item in sorted_data]
-plt.figure(figsize=(8, 10))
-plt.bar(categories_, area_normalized_values, color='blue', edgecolor='black')
+plt.figure(figsize=(2.5, 3))
+colors =  plt.cm.tab10(range(10))
+plt.bar(categories_, area_normalized_values, color=colors, edgecolor='black')
 plt.xticks(rotation=45, ha='right')
-plt.xlabel('Categories', fontsize=10)
-plt.ylabel('Count per μm\u00b2', fontsize=10)
-plt.title('Lectin Classes distribution', fontsize=13)
+#plt.xlabel('Categories', fontsize=label_font_size)
+plt.ylabel('Count per μm\u00b2', fontsize=label_font_size)
+plt.title('Lectin Classes distribution', fontsize=title_font_size)
+plt.xticks(fontsize = tick_font_size)
+plt.yticks(fontsize = tick_font_size)
 plt.show()
-
-plt.savefig(localization_folder/f"{timestamp}_Lectin_Classes_ per_sq-microns_{radius}nm",bbox_inches='tight')   
+if save ==True:
+    plt.savefig(localization_folder/f"{timestamp}_Lectin_Classes_ per_sq-microns_{radius}nm.{FIGFORMAT}",bbox_inches='tight')   
      
 #%%Save classes to json file
 
 # Save class counts
-output_file_path = localization_folder / f"{timestamp}_Number_of_Lectin_Classes_{radius}nm.json"
+if save == True:
+    output_file_path = localization_folder / f"{timestamp}_Number_of_Lectin_Classes_{radius}nm.json"
 
 sorted_counter = dict(sorted(class_counter.items(), key=lambda item: item[1], reverse=True))
 num_classes = {str(key): value for key, value in sorted_counter.items()}
 
 # Save to a JSON file
-with open(output_file_path, 'w') as json_file:
-    json.dump(num_classes, json_file, indent=4)
+if save == True:
+    with open(output_file_path, 'w') as json_file:
+        json.dump(num_classes, json_file, indent=4)
 #Save Class count per unit area   
-PCA_output_file_path = localization_folder / f"{timestamp}_Lectin_Classes_ per_sq-microns_for_PCA_{radius}nm.json"
+if save == True:
+    PCA_output_file_path = localization_folder / f"{timestamp}_Lectin_Classes_ per_sq-microns_for_PCA_{radius}nm.json"
 
 sorted_counter = dict(sorted(class_counter.items(), key=lambda item: item[1], reverse=True))
 class_per_area = {str(key): value/area_of_cell for key, value in sorted_counter.items()}
 
 # Save to a JSON file
-with open(PCA_output_file_path, 'w') as json_file:
-    json.dump(class_per_area, json_file, indent=4)
+if save ==True:
+    with open(PCA_output_file_path, 'w') as json_file:
+        json.dump(class_per_area, json_file, indent=4)
     
     
 #%%
@@ -376,8 +392,8 @@ location_dictionary_sorted = sorted(location_dictionary.items(), key=lambda item
 # Select the top 5 entries based on the number of elements in the list
 data_to_plot = location_dictionary_sorted[:number_to_plot]
 
-# Plotting
-plt.figure(figsize=(fig_width*2, fig_height*2), dpi=dpi)
+#%% Plotting
+plt.figure(figsize=(2.57,2.57), dpi=dpi)
 
 # Assign unique colors for each key
 colors = plt.cm.tab10(range(len(data_to_plot)))  # Generate distinct colors for the top 5
@@ -387,7 +403,7 @@ for (key, coords), color in zip(data_to_plot, colors):
     x_vals, y_vals = zip(*scaled_coords)  # Unpack x and y coordinates
     
     # Set a fixed spot size for all points (e.g., 50 points²)
-    plt.scatter(x_vals, y_vals, label=str(key), color=color, s=4)  # Scatter plot
+    plt.scatter(x_vals, y_vals, label=str(key), color=color, s=0.05)  # Scatter plot
 
 # Set axis limits to match the full field of view
 plt.xlim(0, field_of_view)  # 0 to 74.88 µm
@@ -396,16 +412,19 @@ plt.ylim(0, field_of_view)  # 0 to 74.88 µm
 # Invert the y-axis to set the origin at the top-left
 plt.gca().invert_yaxis()
 
-# Add legend and labels
-plt.legend(title="Classes")
-plt.xlabel("X Coordinate (µm)")
-plt.ylabel("Y Coordinate (µm)")
-plt.title(f"Top {number_to_plot} classes")
-plt.grid(True)
+# Add labels
+
+plt.xlabel("X Coordinate (µm)", fontsize = label_font_size)
+plt.ylabel("Y Coordinate (µm)", fontsize = label_font_size)
+plt.title(f"Top {number_to_plot} classes", fontsize = title_font_size)
+plt.xticks(fontsize = tick_font_size)
+plt.yticks(fontsize=tick_font_size)
+plt.grid(False)
 
 # Show the plot
 plt.show()
-plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius}nm",bbox_inches='tight') 
+if save == True:
+    plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius}nm.{FIGFORMAT}",bbox_inches='tight') 
 
       
             
@@ -414,7 +433,7 @@ plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius}nm",bbox_in
 
 
 
-plt.close("all")
+#plt.close("all")
 
 
 

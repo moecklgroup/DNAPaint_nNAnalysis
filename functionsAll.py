@@ -27,8 +27,15 @@ import os
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import json
 import scipy.spatial as spat
+plt.rcParams['font.family'] = 'arial'
 
-SAVEFORMAT='png'
+FIGFORMAT='.pdf'
+
+save = False
+annotate = False
+label_font_size = 10
+title_font_size = 10
+tick_font_size = 10
 
 
 # %% clusteringDBSCAN
@@ -215,23 +222,29 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path, maxima_matrix_x):
         channel_x = channel_x.split('distNN_')[-1]
         maxima_matrix_x.loc[channel_x, channel_y] = xmax
         dict_of_peaks[f"{channel_x},{channel_y}"] = peak
-        plt.annotate("x={:.3f}, y={:.3f}".format(xmax, ymax), xy=(xmax, ymax))
+        if annotate == True:
+            plt.annotate("x={:.3f}, y={:.3f}".format(xmax, ymax), xy=(xmax, ymax))
 
-    plt.legend(fontsize='x-large', loc='upper right')
-    plt.xlabel('Distance to nearest neighbor (nm)')
-    plt.ylabel('Count')
+    legend = plt.legend(fontsize='x-large', loc='upper right')
+    legend.get_title().set_fontsize(f'{label_font_size}')
+    plt.xlabel('Distance to nearest neighbor (nm)', fontsize = label_font_size)
+    plt.ylabel('Counts', fontsize = label_font_size)
     plt.xlim((0, rangeUp))  # x lim of the histogram display
-
-    plt.savefig(path + '.png')  # save figure as png in specified path
-    with open(output_file_path, 'w') as json_file:
-        json.dump(dict_of_peaks, json_file, indent=4)
+    plt.xticks(fontsize = tick_font_size)
+    plt.yticks(fontsize = tick_font_size)
+    if save == True:
+        
+        plt.savefig(path + FIGFORMAT, bbox_inches='tight')  # save figure as png in specified path
+        with open(output_file_path, 'w') as json_file:
+            json.dump(dict_of_peaks, json_file, indent=4)
     
     return maxima_matrix_x
 
 
 def plot_matrix_histogram(matrix, path):
 
-    plt.figure(figsize=(10, 10))
+    #plt.figure(figsize=(15, 15))
+    plt.figure(figsize=(5,5))
     
     matrix_np = matrix.to_numpy().astype(float)
     original_matrix = np.copy(matrix_np)
@@ -248,21 +261,25 @@ def plot_matrix_histogram(matrix, path):
     bounds = list(np.linspace(min_val, max_val, cmap.N)) 
 
     norm = BoundaryNorm(bounds, cmap.N)
-    fig, ax = plt.subplots(figsize=(10,10))
+    #fig, ax = plt.subplots(figsize=(10,10))
+    fig, ax = plt.subplots(figsize=(3.2,3.52))
 
     im = ax.imshow(matrix_np, cmap=cmap, norm=norm)
     
     #ax.grid(False)
     
     for (j,i), val in np.ndenumerate(original_matrix):
-         ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='w')
+         ax.text(i, j, '{:.1f}'.format(val), ha='center', va='center', color='k', fontsize = 10)
             
     
-    plt.xticks(np.arange(len(matrix.columns)), matrix.columns)
-    plt.yticks(np.arange(len(matrix.index)), matrix.index)
-    plt.colorbar(im, ax=ax, label=r'maximum of nN distances (nm)')
+    plt.xticks(np.arange(len(matrix.columns)), matrix.columns, fontsize = 10, rotation=45)
+    plt.yticks(np.arange(len(matrix.index)), matrix.index, fontsize = 10)
+    cbar = plt.colorbar(im, ax=ax)
+    #cbar.set_label(label = r'maximum of nN distances (nm)', size = 'x-large', weight='bold')
+    cbar.ax.tick_params(labelsize = 10)
     plt.tight_layout()
-    plt.savefig(os.path.join(path + '.png'))
+    if save == True:
+        plt.savefig(os.path.join(path + FIGFORMAT),bbox_inches='tight')
     plt.close()
 
 
