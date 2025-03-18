@@ -7,7 +7,7 @@ This folder should be given as the input in the variable "localization folder". 
 cluster information as a json file, bar chart of the top classes, and the scatter plot of top x class location.  
 @author: dmoonnu
 """
-
+#import packages
 import numpy as np
 from pathlib import Path
 import pandas as pd
@@ -19,12 +19,16 @@ import json
 from datetime import datetime
 import matplotlib
 import yaml
+#hide grids from all th axes
 plt.rcParams["axes.grid"] = False
+#set the font to arial
 plt.rcParams['font.family'] = 'arial'
-save = False
+#Decide on whether you want to save the analysis results
+save = True
 #Boolean for controlling the representation of the glycan maps depending on cell sizes. 
 #If you have a small cell, turn this on so that the map is represented in the middle of the plot and zoomed in.
 zoom = True
+#Set font size required on plots
 label_font_size = 10
 title_font_size = 10
 tick_font_size = 10
@@ -37,12 +41,18 @@ matplotlib.use('Qt5Agg')
 key_for_area = "Total Picked Area (um^2)"
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
 radius = 5
+#set the number of classes o be mapped
 number_to_plot =5 #tp x to plot
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat\MCF10A\Cell1"
+#Location to the folder containing cluster centers
+pathLocsPoints = r"C:\Users\dmoonnu\Desktop\Tissue\Regular\Non Tumor Full Area 2"
+#convert the location to a path object
 localization_folder = Path(pathLocsPoints)
-
+#Search for yaml files in the folder (yaml files are created as a metadata for any reslts from picasso)
+#Fetch the first file. Becoz the aim is to get the pick area of the FOV under analysis. This pick area is same for all channels.
 yaml_file = (list(localization_folder.glob("*.yaml")))[0]
+#open the yaml file
 with open(yaml_file,'r') as file:
+    #load the data. Multiple documents are present in a single file. 
     documents=yaml.safe_load_all(file)
     for info in documents:
         if isinstance(info, dict) and key_for_area in info:
@@ -50,8 +60,6 @@ with open(yaml_file,'r') as file:
 
 
 #%%HDF5 handling
-
-
 
 #iterating to look for hdf5 files in the folder
 for file in localization_folder.glob('**/*.hdf5'):   
@@ -75,15 +83,12 @@ neighbor_master={}
 #Dictionary to store the neighbors with core point as the key and each value as the list of tuple pair with the distance to to the considered core
 distance_indexed_neighbor={}
 #iterate thru each dataset
-for df_key in data_dict:
-
-    
+for df_key in data_dict:  
     df_of_interest_key = df_key  
-
     com_name = f"neighbors_of_{df_key}" #center of mass name to be used as  the key in the dictionaries
     neighbor_master[com_name] = {}
     distance_indexed_neighbor[com_name]={}
-    # Create a tree Excluding the key of interest
+    # Create a tree Excluding the key of interest. This is a note for myself. In later version of the code, we decided to look into the same channel
     # Convert each DataFrame's points to KDTree format, except the DataFrame of interest
     #trees = {key: KDTree((df[['x', 'y']]*130).values) for key, df in data_dict.items() if key != df_of_interest_key}
     trees = {key: KDTree((df[['x', 'y']]*130).values) for key, df in data_dict.items()}
@@ -94,12 +99,14 @@ for df_key in data_dict:
     # Iterate through points in the DataFrame of interest and find neighbors in other DataFrames
     #print(f"Current core is {df_key}\n\n")
     for row_index_of_com, column in tqdm(df_of_interest.iterrows(), desc=f"Searching for neighbors of {df_of_interest_key}"):
+        #Go to first point in the dataframe chosen
         x1, y1 = column['x']*130, column['y']*130
            #now look for neighbors standing at this point
-        # Check for neighbors in all other DataFrames using their KDTree
-        for current_family, current_family_members in trees.items():
+        # Check for neighbors in all other DataFrames using their KDTree. Iterate through each tree.
+        for current_family, current_family_members in trees.items(): #Current family = key and curent family members=KDtree
             #Generates a list of indices coresponding to the dataframe 
             indices = current_family_members.query_ball_point([x1, y1], r=radius)
+            #Preventing same point as the neighbor of itself
             filtered_indices = [num for num in indices if df_key != current_family and num != row_index_of_com]
             #indices = current_family_members.query_ball_point([x1, y1], r=radius) if df_key==current_family and 
             # if len(indices)>2: 
@@ -247,7 +254,7 @@ from itertools import combinations_with_replacement
 lectins = ['WGA','SNA','PHAL','AAL','PSA','DBCO']
 possible_combinations= []
 for i in range(2, 7):
-    # Generate combinations with replacement for the current size i
+    # Generate "combinations with replacement" for the current size i
     combs = list(combinations_with_replacement(lectins, i))
     possible_combinations.extend(combs)  # Store the combinations in the list
 

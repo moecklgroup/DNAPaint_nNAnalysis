@@ -35,7 +35,7 @@ funct.annotate = False
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat\MCF10A\Cell1"
+pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat\MCF10A\Cell2"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -51,7 +51,7 @@ dictionaryNames = {'wga': 'WGA',
                    'phal': 'PHAL',
                    'aal': 'AAL',
                    'psa': 'PSA',
-                   'dbco': 'DBCO'}
+                   'dbco':'DBCO'}
 
 orderedNames = list(dictionaryNames.values())
 
@@ -60,15 +60,8 @@ orderedNames = list(dictionaryNames.values())
 # =============================================================================
 
 # histogram distances points to nearest neighbors in same channel
-rangeUpSameChannel = 400  # maximum display x axis
-binsizeSameChannel = 2  # bin size
-
-# histogram distances points to nearest neighbors in different channel
-rangeUpCrossChannel = 300  # maximum display x axis
-binsizeCrossChannel = 2  # binsize
-
-
-    
+upper_limit = 400  # maximum display x axis
+bin_size = 2  # bin size   
 #%% import from hdf5
 
 # makes 1 dictionary of arrays for the localizations of the points of all the channels
@@ -89,16 +82,16 @@ else:
 # before on the same day
 # if the folder already exists - nothing is done
 # =============================================================================
+timenow = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S")
 
-
-pathNewFolder = pathLocsPoints + '/' + str(datetime.date.today())
+pathNewFolder = pathLocsPoints + '/' + str(timenow)
 if not Path(pathNewFolder).exists():
     Path(pathNewFolder).mkdir()
 
 # %% distance to first nearest neighbor for one in all six channels
 
 
-timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
+
 # timestamp in the beginning of all new data files for identification
 # is the same for all files of the same analysis (run of code)
 
@@ -108,11 +101,11 @@ timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
 
 #   max x for display of the histogram 
 #         - 'rangeUp' parameter of the 'displayHistFigure' function
-#         => using the variables rangeUpSameChannel and rangeUpCrossChannel
+#         => using the variables upper_limit and upper_limit
 
 #   size of the bins for the histogram 
 #         - 'binsize' parameter of the 'displayHistFigure' function
-#         => using the variables binsizeSameChannel and binsizeCrossChannel
+#         => using the variables bin_size and binsizeCrossChannel
 # =============================================================================
 
 maxima_x = pd.DataFrame(index=dictionaryLocalizationsPoints.keys(), columns=dictionaryLocalizationsPoints.keys())
@@ -123,7 +116,7 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
     dictionaryDist = funct.nearestNeighborsOneInAll({i: dictionaryLocalizationsPoints[i]},
                                                     dictionaryLocalizationsNeighbors)
 
-    nameCSV = timenow + 'DistNN_' + i + '_In_All'
+    nameCSV = timenow + '_DistNN_' + i + '_In_All'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0:
         nameCSV = nameCSV + 'random'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0:
@@ -135,36 +128,25 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
     # =============================================================================
     #     distance to NN of one channel in itself is displayed separatly
     #     than the crosschannel distances to NN
-    # =============================================================================
+    # =============================================================================    
 
-    nameFIG = timenow + 'HistDistNN_' + i + '_In_' + list(dictionaryLocalizationsNeighbors.keys())[
-        list(dictionaryLocalizationsPoints.keys()).index(i)]
-
-    # display hist of distance to NN for channel i in channel i
-    maxima_x = funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if
-                                        k == list(dictionaryDist.keys())[list(dictionaryLocalizationsPoints).index(i)]},
-                                       rangeUp=rangeUpSameChannel,  # max x of histogram display
-                                       binsize=binsizeSameChannel,  # histogram binsize
-                                       path=pathNewFolder + '/' + nameFIG,
-                                       maxima_matrix_x=maxima_x)
-
-    nameFIG = timenow + 'HistDistNN_' + i + '_In_All'
+    nameFIG = timenow + '_HistDistNN_' + i + '_In_All'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0:
         nameFIG = nameFIG + 'random'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0:
         nameFIG = nameFIG + '_centroids'
         
     # reorder the matrix
+    #FIXME
+    maxima_x = maxima_x.loc[orderedNames, orderedNames]    
+    maxima_x = funct.displayHistFigure(
+    dictionaryDist,  # Pass the entire dictionary without filtering
+    rangeUp=upper_limit,  # Max X value for histogram display
+    binsize=bin_size,  # Histogram bin size
+    path=pathNewFolder + '/' + nameFIG,  # Save path for the figure
+    maxima_matrix_x=maxima_x  # Passing previous maxima_x values
+)
     maxima_x = maxima_x.loc[orderedNames, orderedNames]
-
-    # display hist of distance to NN for channel i in all others
-    maxima_x = funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if
-                                        not k == list(dictionaryDist.keys())[
-                                            list(dictionaryLocalizationsPoints).index(i)]},
-                                       rangeUp=rangeUpCrossChannel,  # max x of histogram display
-                                       binsize=binsizeCrossChannel,  # histogram binsize
-                                       path=pathNewFolder + '/' + nameFIG,
-                                       maxima_matrix_x=maxima_x)
 
     # =============================================================================
     #     the csv files of distance to NN and figures 
@@ -177,7 +159,7 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
 
 print(maxima_x)
 
-nameFigMatrix = timenow + 'nN_matrix'
+nameFigMatrix = timenow + '_nN_matrix'
 funct.plot_matrix_histogram(maxima_x, path=pathNewFolder + '/' + nameFigMatrix)
 
 # save analysis parameters in txt file
@@ -189,26 +171,23 @@ funct.plot_matrix_histogram(maxima_x, path=pathNewFolder + '/' + nameFigMatrix)
 # =============================================================================
 
 
-parametersfilename = timenow + 'Parameters.txt'
+parametersfilename = timenow + '_Parameters.txt'
 
 # w tells python we are opening the file to write into it
 outfile = open(pathNewFolder + '/' + parametersfilename, 'w')
 
 outfile.write('Path to points for which to find neighbors : ' + pathLocsPoints + '\n\n')
 outfile.write('Path to pools of potential neighbors : ' + pathLocsNeighbors + '\n\n')
-outfile.write('Range histogram same channel : 0-' + str(rangeUpSameChannel) + ' (nm) \n\n')
-outfile.write('bin size histogram same channel : ' + str(binsizeSameChannel) + ' (nm) \n\n')
-outfile.write('Range histogram cross channel : 0-' + str(rangeUpCrossChannel) + ' (nm) \n\n')
-outfile.write('bin size histogram cross channel : ' + str(binsizeCrossChannel) + ' (nm) \n\n')
-
+outfile.write('Range histogram : 0-' + str(upper_limit) + ' (nm) \n\n')
+outfile.write('bin size histogram : ' + str(bin_size) + ' (nm) \n\n')
 outfile.close()  # Close the file when done
-plt.close('all')
+#plt.close('all')
 
 #%%Combine the NN distance histogram peaks to a single file
 
 keyword = "peaks"
 pathNewFolder = Path(pathNewFolder)
-peaks_combined_output_file = pathNewFolder.parent / "Peaks_Combined.json"
+peaks_combined_output_file = pathNewFolder / "Peaks_Combined.json"
 combined_data = {}
 for file in pathNewFolder.rglob(f"*{keyword}.json"):
     with file.open("r", encoding="utf-8") as f:

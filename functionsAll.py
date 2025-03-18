@@ -31,11 +31,11 @@ plt.rcParams['font.family'] = 'arial'
 
 FIGFORMAT='.pdf'
 
-save = False
+save = True
 annotate = False
-label_font_size = 10
+label_font_size = 15
 title_font_size = 10
-tick_font_size = 10
+tick_font_size = 15
 
 
 # %% clusteringDBSCAN
@@ -218,8 +218,8 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path, maxima_matrix_x):
         xmax = x[np.argmax(y)]  # x value for the highest bin (max occurence)
         ymax = y.max()  # y (number of occurences value for the highest bin
         peak = x[np.argmax(y)] 
-        channel_x, channel_y = i.split('_in_')
-        channel_x = channel_x.split('distNN_')[-1]
+        channel_x, channel_y = i.split('-')
+        #channel_x = channel_x.split('distNN_')[-1]
         maxima_matrix_x.loc[channel_x, channel_y] = xmax
         dict_of_peaks[f"{channel_x},{channel_y}"] = peak
         if annotate == True:
@@ -383,8 +383,9 @@ def nearestNeighborsOneInAll(dictPoints, dictLocs):
     Only handles one channel in multiple.
     
     Parameters:
-        dictLocs: Coordinates of points that are the pool of potential neighbours for the nearest neighbour search (dictionary of 2D array, float).
         dictPoints: Coordinates of points in for which we want the nearest neighbour found (dictionary with a unique 2D array, float).
+        dictLocs: Coordinates of points that are the pool of potential neighbours for the nearest neighbour search (dictionary of 2D array, float).
+        
     
     Output:
         dictDist: Distance the nearest neighbours of each point of dictPoints in each array of dictLocs (dictionary of 1D array, float).
@@ -403,10 +404,10 @@ def nearestNeighborsOneInAll(dictPoints, dictLocs):
 
         # WARNING : THE KEYS HAVE TO BE THE SAME IF THE ARRAYS ARE THE SAME
         if list(dictPoints.keys())[0] == i:  # if the two arrays X and Y are the same - by name
-            dictDist['distNN_' + list(dictPoints.keys())[0] + '_in_' + i] = distances[:, 1]
+            dictDist[list(dictPoints.keys())[0] + '-' + i] = distances[:, 1]
             # second column of distances (true NN and not 0 for point itself if same array)
         else:
-            dictDist['distNN_' + list(dictPoints.keys())[0] + '_in_' + i] = distances[:, 0]
+            dictDist[list(dictPoints.keys())[0] + '-' + i] = distances[:, 0]
             # first column, no problem
 
     return dictDist

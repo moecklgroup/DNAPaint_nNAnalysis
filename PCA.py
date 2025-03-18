@@ -21,23 +21,30 @@ label_font_size = 10
 title_font_size = 10
 tick_font_size = 10
 FIGFORMAT = 'pdf'
-
-
+legend = True
+show_plot = False
+#Choose which data to plot
+#data_to_plot ="NN"
+data_to_plot ="glyco"
+threed_view =[-177,150]
 
 folders = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat"
 #folder_names = ["Regular", "Tumor"] 
 folder_names = ["MCF10A", "MCF10AT","MCF10A+TGFb","MCF10AT+TGFb"]
 #folder_names = ["Body", "Dendrons"] 
 
-# USe keyword="PCA" for GlyCO and "Peaks_Combined" for NN peaks
-keyword="PCA"
-number_of_characters_to_consider = 15
+
+if data_to_plot== "NN":
+    keyword="Peaks_Combined"
+if data_to_plot== "glyco":
+    keyword="PCA"
+number_of_characters_to_consider = 20
 #Number of axe to use in PCA
 pca_axes = 3
 #Boolean to decide whether to save or not
-save = False
+save = True
 #orientation of the 3d plot [elevation,azimuth]
-threed_view =[-167,87]
+
 
 
 
@@ -140,7 +147,10 @@ def extract_key_value_pairs(json_files, folder_names,pca_axes):
     if pca_axes==2:
         plot_pca(df)
     elif pca_axes==3:
-        plot_pca_3d(df)
+        legend=True #Does the pltting twice not to have the legend
+        plot_pca_3d(df,legend)
+        legend=False
+        plot_pca_3d(df,legend)
     plot_scree(pca)
 
    
@@ -148,7 +158,7 @@ def extract_key_value_pairs(json_files, folder_names,pca_axes):
     return df, pca
 
 
-def plot_pca_3d(df):
+def plot_pca_3d(df,legend):
     fig = plt.figure(figsize=(3.75, 3.75))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -164,17 +174,15 @@ def plot_pca_3d(df):
     ax.set_xlabel('PC 1', fontsize = label_font_size)
     ax.set_ylabel('PC 2', fontsize = label_font_size)
     ax.set_zlabel('PC 3', fontsize = label_font_size)
-    pca_legend = ax.legend(title="Cell Type", fontsize = 'medium',loc="lower left")
-    pca_legend.get_title().set_fontsize(f'{label_font_size}')
+    if legend:
+        pca_legend = ax.legend(title="Cell Type", fontsize = 'medium',loc="upper left")
+        pca_legend.get_title().set_fontsize(f'{label_font_size}')
     xstart, xend = ax.get_xlim()
     ystart, yend = ax.get_ylim()
     zstart, zend = ax.get_zlim()
     ax.xaxis.set_ticks(np.arange(xstart, xend,0.2))
     ax.yaxis.set_ticks(np.arange(ystart, yend,0.2))
-    ax.zaxis.set_ticks(np.arange(zstart, zend,0.2))    
-    
-    
-    
+    ax.zaxis.set_ticks(np.arange(zstart, zend,0.2))     
     #plt.xticks(labels="", fontsize = tick_font_size)
     # plt.yticks(fontsize=tick_font_size)
     ax.tick_params('x', labelsize=tick_font_size, labelbottom=False)
@@ -185,8 +193,12 @@ def plot_pca_3d(df):
     ax.view_init(elev=threed_view[0], azim=threed_view[1])  # Adjust orientation before saving
     plt.show()
     if save:
-        plt.savefig(Path(folders)/f"PCA 3d {fig_suffix}.{FIGFORMAT}", bbox_inches="tight")
-    
+        if legend:
+            plt.savefig(Path(folders)/f"PCA 3D with legend {fig_suffix}.{FIGFORMAT}", bbox_inches="tight")
+        if not legend:
+            plt.savefig(Path(folders)/f"PCA 3D without legend {fig_suffix}.{FIGFORMAT}", bbox_inches="tight")
+    if not show_plot: #close the plots
+        plt.close("all")
 
 
 def plot_pca(df):
@@ -212,7 +224,8 @@ def plot_pca(df):
     plt.show()
     if save:
         plt.savefig(Path(folders)/f"PCA 2d {fig_suffix}.{FIGFORMAT}", bbox_inches="tight")
-    
+    if not show_plot: #close the plots
+        plt.close("all")
 def plot_scree(pca_model):
     # Plotting the Scree Plot
     plt.figure(figsize=(8, 6))
@@ -230,6 +243,8 @@ def plot_scree(pca_model):
     
     # Show the plot
     plt.show()
+    if not show_plot: #close the plots
+        plt.close("all")
 
 def main():
 
