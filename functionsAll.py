@@ -276,7 +276,7 @@ def plot_matrix_histogram(matrix, path):
     plt.yticks(np.arange(len(matrix.index)), matrix.index, fontsize = 10)
     cbar = plt.colorbar(im, ax=ax)
     #cbar.set_label(label = r'maximum of nN distances (nm)', size = 'x-large', weight='bold')
-    cbar.set_ticks(np.linspace(min_val, max_val,5))
+    cbar.set_ticks(np.linspace(round(min_val), round(max_val),5))
     cbar.ax.tick_params(labelsize = 10)
     plt.tight_layout()
     if save == True:
