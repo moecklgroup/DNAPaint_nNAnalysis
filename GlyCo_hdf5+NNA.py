@@ -2,14 +2,30 @@
 """
 Created on Mon Sep 30 09:26:13 2024
 This code is intended to cluster the multidimensional super resolution data within a given radius. Localization data(cluster centers) should be saved
-in a folder with the filenames starting with the corresponding lectin followed by underscores. (eg: "AAL_cluster_centers").
+in a folder with the filenames starting with the corresponding lectin followed by underscores. (eg: "AAL_and whatever necesssary").
 This folder should be given as the input in the variable "localization folder". Also set the radius. The outputs are multidimensional 
 cluster information as a joson file, bar chart of the top classes, and the scatter plot of top x class location.  
 
 Codes are supposed to be run at the level of a single cell. ie. Folder containing cluster centers of individual cells
 @author: dmoonnu
 """
+###############################CUSTOM RENDER###################################
+#User Inputs
 
+pixelsize =130
+min_locs =1
+frame_analysis = True
+#Nena Factor for clustering
+xnena = 2
+
+dictionaryNames = {'wga': 'WGA',
+                   'sna': 'SNA',
+                   'phal': 'PHAL',
+                   'aal': 'AAL',
+                   'psa': 'PSA',
+                   'dbco':'DBCO'}
+FIGFORMAT = '.pdf'
+#%%Imports
 from custom_picasso import postprocess, io
 from custom_picasso import clusterer
 import numpy as np
@@ -19,32 +35,25 @@ from pathlib import Path
 from tqdm import tqdm
 import json
 
+plt.rcParams['font.family'] = 'arial'
 plt.rcParams["axes.grid"] = False
 
-#%% Fetching info from the parameter file
+#%% Fetching info from the parameter file about analysis folder
 variables_from_parameter = {}
 with open("parameter_file.json", "r", encoding="utf-8") as f:
     variables_from_parameter = json.load(f)
 
 # get the values from the dictionary
 localization_folder = Path(variables_from_parameter.get('localization_folder'))
-number = variables_from_parameter.get('number')
-secondnumber = variables_from_parameter.get('second_number')
+print(localization_folder)
 
-#%%
-#User Inputs
-pixelsize =130
-min_locs =1
-frame_analysis = True
-#Nena Factor for clustering
-xnena = 2
 
 locs_file = []
 for hdf5 in localization_folder.glob('*.hdf5'):
     locs_file.append(str(hdf5))
     
     
-#%%
+#%% <<<<<<<<<<<<Perform clustering using modified packages from picasso>>>>>>>>
 #Adjust the path to the localization hdf5 file
 cluster_data_location= localization_folder/"90_Custom SMLM Clustered"
 cluster_data_location.mkdir(exist_ok=True)
@@ -87,18 +96,20 @@ for file in locs_file:
     outputpath_locs = os.path.join(str(cluster_data_location), output_name)
     io.save_locs(outputpath_locs, clustered_locs, info)
     print("Calculating Centers...")
-    cluster_centers = clusterer.find_cluster_centers(clustered_locs,130)
+    cluster_centers = clusterer.find_cluster_centers(clustered_locs,130) #pixel size is not used incase of 2D data.
     outputpath_centers = os.path.join(str(centers_location), output_name_centers)
     io.save_locs(outputpath_centers, cluster_centers, info)
     
 
-#%%Deleting the current variable
-
+#%%Deleting the current variable to avaid any sort of overlaps
+#TODO - Fix this as this is not a good practice
 for var in list(globals().keys()):
-    if var not in ["variables_from_parameter","centers_location", "__builtins__", "__name__", "__doc__", "__package__"]:
+    if var not in ["dictionaryNames",
+                   "FIGFORMAT",
+                   "variables_from_parameter","centers_location", "__builtins__", "__name__", "__doc__", "__package__"]:
         del globals()[var]
-
 #%%
+#############################GlyCo#############################################
 import numpy as np
 from pathlib import Path
 import pandas as pd
@@ -110,21 +121,40 @@ import json
 from datetime import datetime
 import matplotlib
 import yaml
+#hide grids from all th axes
+plt.rcParams["axes.grid"] = False
+#set the font to arial
+plt.rcParams['font.family'] = 'arial'
+#Decide on whether you want to save the analysis results
+save = True
+#Boolean for controlling the representation of the glycan maps depending on cell sizes. 
+#If you have a small cell, turn this on so that the map is represented in the middle of the plot and zoomed in.
+zoom = True
+#Set font size required on plots
+label_font_size = 10
+title_font_size = 10
+tick_font_size = 10
+
+
 
 # Set the graphics backend to Qt
 matplotlib.use('Qt5Agg')
 #kEY TO LOOK IN THE YAML FILE
 key_for_area = "Total Picked Area (um^2)"
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
-radius_for_glyco = 5
+radius = 5
+#set the number of classes o be mapped
 number_to_plot =5 #tp x to plot
-#Connecting the file location from render
+#Location to the folder containing cluster centers
 pathLocsPoints = str(centers_location)
-#Converting it to path obj as glyco needs it as path
+#convert the location to a path object
 localization_folder = Path(pathLocsPoints)
-
+#Search for yaml files in the folder (yaml files are created as a metadata for any reslts from picasso)
+#Fetch the first file. Becoz the aim is to get the pick area of the FOV under analysis. This pick area is same for all channels.
 yaml_file = (list(localization_folder.glob("*.yaml")))[0]
+#open the yaml file to load area of cell
 with open(yaml_file,'r') as file:
+    #load the data. Multiple documents are present in a single file. 
     documents=yaml.safe_load_all(file)
     for info in documents:
         if isinstance(info, dict) and key_for_area in info:
@@ -132,8 +162,6 @@ with open(yaml_file,'r') as file:
 
 
 #%%HDF5 handling
-
-
 
 #iterating to look for hdf5 files in the folder
 for file in localization_folder.glob('**/*.hdf5'):   
@@ -157,15 +185,12 @@ neighbor_master={}
 #Dictionary to store the neighbors with core point as the key and each value as the list of tuple pair with the distance to to the considered core
 distance_indexed_neighbor={}
 #iterate thru each dataset
-for df_key in data_dict:
-
-    
+for df_key in data_dict:  
     df_of_interest_key = df_key  
-
     com_name = f"neighbors_of_{df_key}" #center of mass name to be used as  the key in the dictionaries
     neighbor_master[com_name] = {}
     distance_indexed_neighbor[com_name]={}
-    # Create a tree Excluding the key of interest
+    # Create a tree Excluding the key of interest. This is a note for myself. In later version of the code, we decided to look into the same channel
     # Convert each DataFrame's points to KDTree format, except the DataFrame of interest
     #trees = {key: KDTree((df[['x', 'y']]*130).values) for key, df in data_dict.items() if key != df_of_interest_key}
     trees = {key: KDTree((df[['x', 'y']]*130).values) for key, df in data_dict.items()}
@@ -176,14 +201,16 @@ for df_key in data_dict:
     # Iterate through points in the DataFrame of interest and find neighbors in other DataFrames
     #print(f"Current core is {df_key}\n\n")
     for row_index_of_com, column in tqdm(df_of_interest.iterrows(), desc=f"Searching for neighbors of {df_of_interest_key}"):
+        #Go to first point in the dataframe chosen
         x1, y1 = column['x']*130, column['y']*130
            #now look for neighbors standing at this point
-        # Check for neighbors in all other DataFrames using their KDTree
-        for current_family, current_family_members in trees.items():
+        # Check for neighbors in all other DataFrames using their KDTree. Iterate through each tree.
+        for current_family, current_family_members in trees.items(): #Current family = key and curent family members=KDtree
             #Generates a list of indices coresponding to the dataframe 
-            indices = current_family_members.query_ball_point([x1, y1], r=radius_for_glyco)
+            indices = current_family_members.query_ball_point([x1, y1], r=radius)
+            #Preventing same point as the neighbor of itself
             filtered_indices = [num for num in indices if df_key != current_family and num != row_index_of_com]
-            #indices = current_family_members.query_ball_point([x1, y1], r=radius_for_glyco) if df_key==current_family and 
+            #indices = current_family_members.query_ball_point([x1, y1], r=radius) if df_key==current_family and 
             # if len(indices)>2: 
             #     print(f"{df_key}_{row_index_of_com}--{current_family}-{indices}")
             #If indices exist ie. if neighbors exist for the current point from the main loop, these neighbors are stored to a dictionary with the 'id' of the point from main
@@ -329,7 +356,7 @@ from itertools import combinations_with_replacement
 lectins = ['WGA','SNA','PHAL','AAL','PSA','DBCO']
 possible_combinations= []
 for i in range(2, 7):
-    # Generate combinations with replacement for the current size i
+    # Generate "combinations with replacement" for the current size i
     combs = list(combinations_with_replacement(lectins, i))
     possible_combinations.extend(combs)  # Store the combinations in the list
 
@@ -348,32 +375,6 @@ for standard_tup in tqdm(possible_combinations, desc= "Counting Classes"):
     count = sum(1 for tup in result_list if sorted(tup) == standard_tup_set)
     # Update the result dictionary
     class_counter[standard_tup] = count
-
-#%%Plotting class distribution
-
-# timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-# #sorting in the reverse order and picking th etop 10 class
-# sorted_data = sorted(class_counter.items(), key=lambda clas: clas[1], reverse=True)[:10] 
-# sorted_data = [(tuple(sorted(tup[0])), tup[1]) for tup in sorted_data]
-# categories_ = [str(item[0]) for item in sorted_data]
-# values_ = [item[1]/area_of_cell for item in sorted_data]
-# #categories_ = [str(key) for key in class_counter.keys()]
-# #values_ = list(class_counter.values())
-# plt.figure(figsize=(8, 10))
-# # Plot the histogram
-# plt.bar(categories_, values_, color='red', edgecolor='black')
-
-# # Add titles and labels
-# plt.title('Lectin Classes', fontsize=13)
-# plt.xlabel('Categories', fontsize=10)
-# plt.ylabel('Count per μm\u00b2', fontsize=10)
-# plt.xticks(rotation=45, ha='right')
-
-# # Show the plot
-# plt.show()   
-# plt.savefig(localization_folder/f"{timestamp}_Class_Chart_{radius_for_glyco}nm",bbox_inches='tight')        
-
-
 #%%Plotting class distribution  with normalization
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -383,45 +384,47 @@ sorted_data = sorted(class_counter.items(), key=lambda clas: clas[1], reverse=Tr
 sorted_data = [(tuple(sorted(tup[0])), tup[1]) for tup in sorted_data]
 #Fetching the list of categories
 categories_ = [str(item[0]) for item in sorted_data]
-#Scaling with
+#Scaling with area
 area_normalized_values = [item[1] / area_of_cell for item in sorted_data]
 
-# Apply min-max normalization
-# min_value = min(area_normalized_values)
-# max_value = max(area_normalized_values)
-# final_normalized_values = [(value - min_value) / (max_value - min_value) for value in area_normalized_values]
-
 categories_ = [str(item[0]) for item in sorted_data]
-plt.figure(figsize=(8, 10))
-plt.bar(categories_, area_normalized_values, color='blue', edgecolor='black')
+plt.figure(figsize=(2.5, 3))
+colors =  plt.cm.tab10(range(10))
+plt.bar(categories_, area_normalized_values, color=colors, edgecolor='black')
 plt.xticks(rotation=45, ha='right')
-plt.xlabel('Categories', fontsize=10)
-plt.ylabel('Count per μm\u00b2', fontsize=10)
-plt.title('Lectin Classes distribution', fontsize=13)
+#plt.xlabel('Categories', fontsize=label_font_size)
+plt.ylabel('Count per μm\u00b2', fontsize=label_font_size)
+plt.title('Lectin Classes distribution', fontsize=title_font_size)
+plt.xticks(fontsize = tick_font_size)
+plt.yticks(fontsize = tick_font_size)
 plt.show()
-
-plt.savefig(localization_folder/f"{timestamp}_Lectin_Classes_ per_sq-microns_{radius_for_glyco}nm",bbox_inches='tight')   
+if save ==True:
+    plt.savefig(localization_folder/f"{timestamp}_Lectin_Classes_ per_sq-microns_{radius}nm{FIGFORMAT}",bbox_inches='tight')   
      
 #%%Save classes to json file
 
 # Save class counts
-output_file_path = localization_folder / f"{timestamp}_Number_of_Lectin_Classes_{radius_for_glyco}nm.json"
+if save == True:
+    output_file_path = localization_folder / f"{timestamp}_Number_of_Lectin_Classes_{radius}nm.json"
 
 sorted_counter = dict(sorted(class_counter.items(), key=lambda item: item[1], reverse=True))
 num_classes = {str(key): value for key, value in sorted_counter.items()}
 
 # Save to a JSON file
-with open(output_file_path, 'w') as json_file:
-    json.dump(num_classes, json_file, indent=4)
+if save == True:
+    with open(output_file_path, 'w') as json_file:
+        json.dump(num_classes, json_file, indent=4)
 #Save Class count per unit area   
-PCA_output_file_path = localization_folder / f"{timestamp}_Lectin_Classes_ per_sq-microns_for_PCA_{radius_for_glyco}nm.json"
+if save == True:
+    PCA_output_file_path = localization_folder / f"{timestamp}_Lectin_Classes_ per_sq-microns_for_PCA_{radius}nm.json"
 
 sorted_counter = dict(sorted(class_counter.items(), key=lambda item: item[1], reverse=True))
 class_per_area = {str(key): value/area_of_cell for key, value in sorted_counter.items()}
 
 # Save to a JSON file
-with open(PCA_output_file_path, 'w') as json_file:
-    json.dump(class_per_area, json_file, indent=4)
+if save ==True:
+    with open(PCA_output_file_path, 'w') as json_file:
+        json.dump(class_per_area, json_file, indent=4)
     
     
 #%%
@@ -469,9 +472,8 @@ location_dictionary_sorted = sorted(location_dictionary.items(), key=lambda item
 # Select the top 5 entries based on the number of elements in the list
 data_to_plot = location_dictionary_sorted[:number_to_plot]
 
-# Plotting
-plt.figure(figsize=(fig_width*2, fig_height*2), dpi=dpi)
-
+#%% Plotting
+plt.figure(figsize=(2.57,2.57), dpi=dpi)
 # Assign unique colors for each key
 colors = plt.cm.tab10(range(len(data_to_plot)))  # Generate distinct colors for the top 5
 for (key, coords), color in zip(data_to_plot, colors):
@@ -480,37 +482,50 @@ for (key, coords), color in zip(data_to_plot, colors):
     x_vals, y_vals = zip(*scaled_coords)  # Unpack x and y coordinates
     
     # Set a fixed spot size for all points (e.g., 50 points²)
-    plt.scatter(x_vals, y_vals, label=str(key), color=color, s=4)  # Scatter plot
+    plt.scatter(x_vals, y_vals, label=str(key), color=color, s=0.05)  # Scatter plot
+#just in case if the cell is smaller we have to put it to the middle zoomed in
+if zoom==True:
+    x_min, x_max = min(x_vals), max(x_vals)
+    y_min, y_max = min(y_vals), max(y_vals)
+    padding =0
+    x_range = x_max - x_min
+    y_range = y_max - y_min
+    plt.xlim(x_min - padding * x_range, x_max + padding * x_range)
+    plt.ylim(y_min - padding * y_range, y_max + padding * y_range)
+# Set axis limits to match the full field of view. for bigger cells covering the fulll FOV we dont have to zoom it.
+elif zoom == False:
+    plt.xlim(0, field_of_view)  # 0 to 74.88 µm
+    plt.ylim(0, field_of_view)  # 0 to 74.88 µm
 
-# Set axis limits to match the full field of view
-plt.xlim(0, field_of_view)  # 0 to 74.88 µm
-plt.ylim(0, field_of_view)  # 0 to 74.88 µm
-
-# Invert the y-axis to set the origin at the top-left
+# Invert the y-axis to set the origin at the top-left to match the orientation of the reconstruction
 plt.gca().invert_yaxis()
 
-# Add legend and labels
-plt.legend(title="Classes")
-plt.xlabel("X Coordinate (µm)")
-plt.ylabel("Y Coordinate (µm)")
-plt.title(f"Top {number_to_plot} classes")
-plt.grid(True)
+# Add labels
+
+plt.xlabel("X Coordinate (µm)", fontsize = label_font_size)
+plt.ylabel("Y Coordinate (µm)", fontsize = label_font_size)
+plt.title(f"Top {number_to_plot} classes", fontsize = title_font_size)
+plt.xticks(fontsize = tick_font_size)
+plt.yticks(fontsize=tick_font_size)
+plt.grid(False)
 
 # Show the plot
 plt.show()
-plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius_for_glyco}nm",bbox_inches='tight') 
-plt.close("all")
+if save == True:
+    plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius}nm{FIGFORMAT}",bbox_inches='tight') 
 
 
-#%%Deleting the current variable
+#plt.close("all")
 
+#%%Deleting the current variables
+#TODO - Fix this as this is not a good practice
 for var in list(globals().keys()):
-    if var not in ["variables_from_parameter","pathLocsPoints", "__builtins__", "__name__", "__doc__", "__package__"]:
+    if var not in ["dictionaryNames",
+                   "FIGFORMAT",
+                   "variables_from_parameter","pathLocsPoints", "__builtins__", "__name__", "__doc__", "__package__"]:
         del globals()[var]
-          
-#%%# %% imports
-
-
+#%%
+#########################Nearest Neighbor Analysis#############################
 from tqdm import tqdm
 from pathlib import Path
 import datetime
@@ -519,6 +534,12 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import functionsAll as funct
 import json
+plt.rcParams["axes.grid"] = False
+
+funct.save= True
+#Choose if you want to annotate the peaks of histogram
+funct.annotate = False
+funct.FIGFORMAT = FIGFORMAT
 
 # %% paths and name dictionary
 
@@ -526,13 +547,14 @@ import json
 # =============================================================================
 # paths to the csv files to analyse
 # 
-# if the csv files ares the same for the points in search of a neighbor 
+# if the csv files ares the same for the points in search of a neig
 # and those that make up the pool of potential neighbors, 
 # then pathLocsPoints = 'path/to/folder'
 # and pathLocsNeighbors = pathLocsPoints
 # =============================================================================
 
-# path to the csv files of the points - pool of potential neighbors 
+# path to the csv files of the points in search of neigbors
+
 pathLocsNeighbors = pathLocsPoints
 
 # =============================================================================
@@ -542,11 +564,6 @@ pathLocsNeighbors = pathLocsPoints
 # to update when new lectins are used 
 # =============================================================================
 
-dictionaryNames = {'wga': 'WGA',
-                   'sna': 'SNA',
-                   'phal': 'PHAL',
-                   'aal': 'AAL',
-                   'psa': 'PSA'}
 
 orderedNames = list(dictionaryNames.values())
 
@@ -555,15 +572,8 @@ orderedNames = list(dictionaryNames.values())
 # =============================================================================
 
 # histogram distances points to nearest neighbors in same channel
-rangeUpSameChannel = 400  # maximum display x axis
-binsizeSameChannel = 2  # bin size
-
-# histogram distances points to nearest neighbors in different channel
-rangeUpCrossChannel = 300  # maximum display x axis
-binsizeCrossChannel = 2  # binsize
-
-
-    
+upper_limit = 400  # maximum display x axis
+bin_size = 2  # bin size   
 #%% import from hdf5
 
 # makes 1 dictionary of arrays for the localizations of the points of all the channels
@@ -584,31 +594,14 @@ else:
 # before on the same day
 # if the folder already exists - nothing is done
 # =============================================================================
+timenow = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S")
 
-
-pathNewFolder = pathLocsPoints + '/' + str(datetime.date.today())
+pathNewFolder = pathLocsPoints + '/' + str(timenow)
 if not Path(pathNewFolder).exists():
     Path(pathNewFolder).mkdir()
 
 # %% distance to first nearest neighbor for one in all six channels
 
-
-timenow = datetime.datetime.now().strftime("%H-%M-%S-%f_")
-# timestamp in the beginning of all new data files for identification
-# is the same for all files of the same analysis (run of code)
-
-
-# =============================================================================
-# parameters for the histogram that can be chaged : 
-
-#   max x for display of the histogram 
-#         - 'rangeUp' parameter of the 'displayHistFigure' function
-#         => using the variables rangeUpSameChannel and rangeUpCrossChannel
-
-#   size of the bins for the histogram 
-#         - 'binsize' parameter of the 'displayHistFigure' function
-#         => using the variables binsizeSameChannel and binsizeCrossChannel
-# =============================================================================
 
 maxima_x = pd.DataFrame(index=dictionaryLocalizationsPoints.keys(), columns=dictionaryLocalizationsPoints.keys())
 
@@ -618,7 +611,7 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
     dictionaryDist = funct.nearestNeighborsOneInAll({i: dictionaryLocalizationsPoints[i]},
                                                     dictionaryLocalizationsNeighbors)
 
-    nameCSV = timenow + 'DistNN_' + i + '_In_All'
+    nameCSV = timenow + '_DistNN_' + i + '_In_All'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0:
         nameCSV = nameCSV + 'random'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0:
@@ -630,36 +623,24 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
     # =============================================================================
     #     distance to NN of one channel in itself is displayed separatly
     #     than the crosschannel distances to NN
-    # =============================================================================
+    # =============================================================================    
 
-    nameFIG = timenow + 'HistDistNN_' + i + '_In_' + list(dictionaryLocalizationsNeighbors.keys())[
-        list(dictionaryLocalizationsPoints.keys()).index(i)]
-
-    # display hist of distance to NN for channel i in channel i
-    maxima_x = funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if
-                                        k == list(dictionaryDist.keys())[list(dictionaryLocalizationsPoints).index(i)]},
-                                       rangeUp=rangeUpSameChannel,  # max x of histogram display
-                                       binsize=binsizeSameChannel,  # histogram binsize
-                                       path=pathNewFolder + '/' + nameFIG,
-                                       maxima_matrix_x=maxima_x)
-
-    nameFIG = timenow + 'HistDistNN_' + i + '_In_All'
+    nameFIG = timenow + '_HistDistNN_' + i + '_In_All'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('random') >= 0:
         nameFIG = nameFIG + 'random'
     if list(dictionaryLocalizationsNeighbors.keys())[0].casefold().find('centroid') >= 0:
         nameFIG = nameFIG + '_centroids'
         
-    # reorder the matrix
+    #FIXME
+    maxima_x = maxima_x.loc[orderedNames, orderedNames]    
+    maxima_x = funct.displayHistFigure(
+    dictionaryDist,  # Pass the entire dictionary without filtering
+    rangeUp=upper_limit,  # Max X value for histogram display
+    binsize=bin_size,  # Histogram bin size
+    path=pathNewFolder + '/' + nameFIG,  # Save path for the figure
+    maxima_matrix_x=maxima_x  # Passing previous maxima_x values
+)
     maxima_x = maxima_x.loc[orderedNames, orderedNames]
-
-    # display hist of distance to NN for channel i in all others
-    maxima_x = funct.displayHistFigure({k: v for k, v in dictionaryDist.items() if
-                                        not k == list(dictionaryDist.keys())[
-                                            list(dictionaryLocalizationsPoints).index(i)]},
-                                       rangeUp=rangeUpCrossChannel,  # max x of histogram display
-                                       binsize=binsizeCrossChannel,  # histogram binsize
-                                       path=pathNewFolder + '/' + nameFIG,
-                                       maxima_matrix_x=maxima_x)
 
     # =============================================================================
     #     the csv files of distance to NN and figures 
@@ -672,8 +653,8 @@ for i in tqdm(dictionaryLocalizationsPoints.keys()):
 
 print(maxima_x)
 
-#nameFigMatrix = timenow + 'nN_matrix'
-funct.plot_matrix_histogram(maxima_x, path=pathNewFolder + '/' + timenow + 'nN_matrix')
+nameFigMatrix = timenow + '_nN_matrix'
+funct.plot_matrix_histogram(maxima_x, path=pathNewFolder + '/' + nameFigMatrix)
 
 # save analysis parameters in txt file
 
@@ -684,22 +665,17 @@ funct.plot_matrix_histogram(maxima_x, path=pathNewFolder + '/' + timenow + 'nN_m
 # =============================================================================
 
 
-parametersfilename = timenow + 'Parameters.txt'
+parametersfilename = timenow + '_Parameters.txt'
 
 # w tells python we are opening the file to write into it
 outfile = open(pathNewFolder + '/' + parametersfilename, 'w')
 
 outfile.write('Path to points for which to find neighbors : ' + pathLocsPoints + '\n\n')
 outfile.write('Path to pools of potential neighbors : ' + pathLocsNeighbors + '\n\n')
-outfile.write('Range histogram same channel : 0-' + str(rangeUpSameChannel) + ' (nm) \n\n')
-outfile.write('bin size histogram same channel : ' + str(binsizeSameChannel) + ' (nm) \n\n')
-outfile.write('Range histogram cross channel : 0-' + str(rangeUpCrossChannel) + ' (nm) \n\n')
-outfile.write('bin size histogram cross channel : ' + str(binsizeCrossChannel) + ' (nm) \n\n')
-
+outfile.write('Range histogram : 0-' + str(upper_limit) + ' (nm) \n\n')
+outfile.write('bin size histogram : ' + str(bin_size) + ' (nm) \n\n')
 outfile.close()  # Close the file when done
-
-plt.close("all")
-
+#plt.close('all')
 
 #%%Combine the NN distance histogram peaks to a single file
 
@@ -714,3 +690,4 @@ for file in pathNewFolder.rglob(f"*{keyword}.json"):
 
 # Write the combined data to a single JSON file
 peaks_combined_output_file.write_text(json.dumps(combined_data, indent=4), encoding="utf-8")
+

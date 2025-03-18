@@ -32,7 +32,7 @@ zoom = True
 label_font_size = 10
 title_font_size = 10
 tick_font_size = 10
-FIGFORMAT = 'pdf'
+FIGFORMAT = '.pdf'
 
 
 # Set the graphics backend to Qt
@@ -329,7 +329,7 @@ plt.xticks(fontsize = tick_font_size)
 plt.yticks(fontsize = tick_font_size)
 plt.show()
 if save ==True:
-    plt.savefig(localization_folder/f"{timestamp}_Lectin_Classes_ per_sq-microns_{radius}nm.{FIGFORMAT}",bbox_inches='tight')   
+    plt.savefig(localization_folder/f"{timestamp}_Lectin_Classes_ per_sq-microns_{radius}nm{FIGFORMAT}",bbox_inches='tight')   
      
 #%%Save classes to json file
 
@@ -442,7 +442,7 @@ plt.grid(False)
 # Show the plot
 plt.show()
 if save == True:
-    plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius}nm.{FIGFORMAT}",bbox_inches='tight') 
+    plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius}nm{FIGFORMAT}",bbox_inches='tight') 
 
       
             
