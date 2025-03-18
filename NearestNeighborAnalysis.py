@@ -35,7 +35,7 @@ funct.annotate = False
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat\MCF10A\Cell2"
+pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat\MCF10A\Cell1"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -60,7 +60,7 @@ orderedNames = list(dictionaryNames.values())
 # =============================================================================
 
 # histogram distances points to nearest neighbors in same channel
-upper_limit = 400  # maximum display x axis
+upper_limit = 300  # maximum display x axis
 bin_size = 2  # bin size   
 #%% import from hdf5
 
