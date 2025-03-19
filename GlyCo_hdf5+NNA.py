@@ -29,14 +29,15 @@ from custom_picasso import postprocess, io
 from custom_picasso import clusterer
 import numpy as np
 import os 
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 from pathlib import Path
 from tqdm import tqdm
 import json
 
 plt.rcParams['font.family'] = 'arial'
 plt.rcParams["axes.grid"] = False
-plt.rcParams['savefig.facecolor'] = 'white'
+
+
 
 #%% Fetching info from the parameter file about analysis folder
 variables_from_parameter = {}
@@ -138,7 +139,7 @@ tick_font_size = 10
 
 
 # Set the graphics backend to Qt
-matplotlib.use('Qt5Agg')
+#matplotlib.use('Qt5Agg')
 #kEY TO LOOK IN THE YAML FILE
 key_for_area = "Total Picked Area (um^2)"
 # Radius for neighborhood in nanometers ( Biologically relevant distance to find the neighbouring glycan)
@@ -389,8 +390,8 @@ area_normalized_values = [item[1] / area_of_cell for item in sorted_data]
 
 categories_ = [str(item[0]) for item in sorted_data]
 plt.figure(figsize=(2.5, 3))
-colors =  plt.cm.tab10(range(10))
-plt.bar(categories_, area_normalized_values, color=colors, edgecolor='black')
+bar_colors =  plt.cm.tab10(range(10))
+plt.bar(categories_, area_normalized_values, color=bar_colors, edgecolor='black')
 plt.xticks(rotation=45, ha='right')
 #plt.xlabel('Categories', fontsize=label_font_size)
 plt.ylabel('Count per μm\u00b2', fontsize=label_font_size)
@@ -475,14 +476,14 @@ data_to_plot = location_dictionary_sorted[:number_to_plot]
 #%% Plotting
 plt.figure(figsize=(2.57,2.57), dpi=dpi)
 # Assign unique colors for each key
-colors = plt.cm.tab10(range(len(data_to_plot)))  # Generate distinct colors for the top 5
-for (key, coords), color in zip(data_to_plot, colors):
+dots_colors = plt.cm.tab10(range(len(data_to_plot)))  # Generate distinct colors for the top 5
+for (key, coords), dot_color in zip(data_to_plot, dots_colors):
     # Scale coordinates to micrometers
     scaled_coords = [(x * scale_factor, y * scale_factor) for x, y in coords]
     x_vals, y_vals = zip(*scaled_coords)  # Unpack x and y coordinates
     
     # Set a fixed spot size for all points (e.g., 50 points²)
-    plt.scatter(x_vals, y_vals, label=str(key), color=color, s=0.05)  # Scatter plot
+    plt.scatter(x_vals, y_vals, label=str(key), color=dot_color, s=0.05)  # Scatter plot
 #just in case if the cell is smaller we have to put it to the middle zoomed in
 if zoom==True:
     x_min, x_max = min(x_vals), max(x_vals)

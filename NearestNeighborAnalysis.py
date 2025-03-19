@@ -35,7 +35,7 @@ funct.annotate = False
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat\MCF10A\Cell1"
+pathLocsPoints = r"E:\2025-01-14_DNS006_MPZPM\FOV2\PAINT\Cell1 new clustering\90_Custom Centers"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 
@@ -50,8 +50,7 @@ dictionaryNames = {'wga': 'WGA',
                    'sna': 'SNA',
                    'phal': 'PHAL',
                    'aal': 'AAL',
-                   'psa': 'PSA',
-                   'dbco':'DBCO'}
+                   'psa': 'PSA'}
 
 orderedNames = list(dictionaryNames.values())
 

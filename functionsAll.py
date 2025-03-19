@@ -28,7 +28,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 import json
 import scipy.spatial as spat
 plt.rcParams['font.family'] = 'arial'
-plt.rcParams['savefig.facecolor'] = 'white'
+
 
 FIGFORMAT='.pdf'
 
@@ -251,15 +251,15 @@ def plot_matrix_histogram(matrix, path):
     original_matrix = np.copy(matrix_np)
     
     
-    min_val = np.min(matrix_np)
-    max_val = np.max(matrix_np)
+    min_val = round(np.min(matrix_np))
+    max_val = round(np.max(matrix_np))
 
     # Define the colormap
     cmap = plt.cm.coolwarm
     colors = cmap(np.arange(cmap.N))
 
     # Set color bounds for the original range and the added value
-    bounds = list(np.linspace(min_val, max_val, cmap.N)) 
+    bounds = list(np.linspace(min_val, max_val)) 
 
     norm = BoundaryNorm(bounds, cmap.N)
     #fig, ax = plt.subplots(figsize=(10,10))
@@ -277,7 +277,7 @@ def plot_matrix_histogram(matrix, path):
     plt.yticks(np.arange(len(matrix.index)), matrix.index, fontsize = 10)
     cbar = plt.colorbar(im, ax=ax)
     #cbar.set_label(label = r'maximum of nN distances (nm)', size = 'x-large', weight='bold')
-    cbar.set_ticks(np.linspace(round(min_val), round(max_val),5))
+    cbar.set_ticks(np.linspace(min_val, max_val,5))
     cbar.ax.tick_params(labelsize = 10)
     plt.tight_layout()
     if save == True:

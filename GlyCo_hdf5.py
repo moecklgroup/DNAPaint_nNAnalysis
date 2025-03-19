@@ -21,11 +21,11 @@ import matplotlib
 import yaml
 #hide grids from all th axes
 plt.rcParams["axes.grid"] = False
-plt.rcParams['savefig.facecolor'] = 'white'
+
 #set the font to arial
 plt.rcParams['font.family'] = 'arial'
 #Decide on whether you want to save the analysis results
-save = False
+save = True
 #Boolean for controlling the representation of the glycan maps depending on cell sizes. 
 #If you have a small cell, turn this on so that the map is represented in the middle of the plot and zoomed in.
 zoom = True
