@@ -22,8 +22,7 @@ dictionaryNames = {'wga': 'WGA',
                    'sna': 'SNA',
                    'phal': 'PHAL',
                    'aal': 'AAL',
-                   'psa': 'PSA',
-                   'dbco':'DBCO'}
+                   'psa': 'PSA'}
 FIGFORMAT = '.pdf'
 #%%Imports
 from custom_picasso import postprocess, io
@@ -37,6 +36,7 @@ import json
 
 plt.rcParams['font.family'] = 'arial'
 plt.rcParams["axes.grid"] = False
+plt.rcParams['savefig.facecolor'] = 'white'
 
 #%% Fetching info from the parameter file about analysis folder
 variables_from_parameter = {}
@@ -572,7 +572,7 @@ orderedNames = list(dictionaryNames.values())
 # =============================================================================
 
 # histogram distances points to nearest neighbors in same channel
-upper_limit = 400  # maximum display x axis
+upper_limit = 300  # maximum display x axis
 bin_size = 2  # bin size   
 #%% import from hdf5
 

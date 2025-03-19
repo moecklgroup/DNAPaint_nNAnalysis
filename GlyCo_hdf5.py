@@ -21,10 +21,11 @@ import matplotlib
 import yaml
 #hide grids from all th axes
 plt.rcParams["axes.grid"] = False
+plt.rcParams['savefig.facecolor'] = 'white'
 #set the font to arial
 plt.rcParams['font.family'] = 'arial'
 #Decide on whether you want to save the analysis results
-save = True
+save = False
 #Boolean for controlling the representation of the glycan maps depending on cell sizes. 
 #If you have a small cell, turn this on so that the map is represented in the middle of the plot and zoomed in.
 zoom = True
@@ -44,7 +45,7 @@ radius = 5
 #set the number of classes o be mapped
 number_to_plot =5 #tp x to plot
 #Location to the folder containing cluster centers
-pathLocsPoints = r"C:\Users\dmoonnu\Desktop\Tissue\Regular\Non Tumor Full Area 2"
+pathLocsPoints = r"E:\2025-01-14_DNS006_MPZPM\FOV2\PAINT\Cell1 new clustering\90_Custom Centers"
 #convert the location to a path object
 localization_folder = Path(pathLocsPoints)
 #Search for yaml files in the folder (yaml files are created as a metadata for any reslts from picasso)

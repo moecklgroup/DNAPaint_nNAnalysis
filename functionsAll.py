@@ -28,6 +28,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 import json
 import scipy.spatial as spat
 plt.rcParams['font.family'] = 'arial'
+plt.rcParams['savefig.facecolor'] = 'white'
 
 FIGFORMAT='.pdf'
 
