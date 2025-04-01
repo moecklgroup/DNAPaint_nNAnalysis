@@ -35,7 +35,7 @@ funct.annotate = False
 # =============================================================================
 
 # path to the csv files of the points in search of neigbors
-pathLocsPoints = r"E:\2025-01-14_DNS006_MPZPM\FOV2\PAINT\Cell1 new clustering\90_Custom Centers"
+pathLocsPoints = r"F:\2024-10-17_Tissue_Section_DS031\FOV2\PAINT\GOLD REMOVED\Full Area\90_Custom Centers"
 # path to the csv files of the points - pool of potential neighbors 
 pathLocsNeighbors = pathLocsPoints
 

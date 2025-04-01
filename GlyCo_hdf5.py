@@ -413,7 +413,7 @@ for (key, coords), color in zip(data_to_plot, colors):
     x_vals, y_vals = zip(*scaled_coords)  # Unpack x and y coordinates
     
     # Set a fixed spot size for all points (e.g., 50 points²)
-    plt.scatter(x_vals, y_vals, label=str(key), color=color, s=0.05)  # Scatter plot
+    plt.scatter(x_vals, y_vals, label=str(key), color=color, s=0.8)  # Scatter plot
 #just in case if the cell is smaller we have to put it to the middle zoomed in
 if zoom==True:
     x_min, x_max = min(x_vals), max(x_vals)
@@ -433,8 +433,8 @@ plt.gca().invert_yaxis()
 
 # Add labels
 
-plt.xlabel("X Coordinate (µm)", fontsize = label_font_size)
-plt.ylabel("Y Coordinate (µm)", fontsize = label_font_size)
+plt.xlabel("X (µm)", fontsize = label_font_size)
+plt.ylabel("Y (µm)", fontsize = label_font_size)
 plt.title(f"Top {number_to_plot} classes", fontsize = title_font_size)
 plt.xticks(fontsize = tick_font_size)
 plt.yticks(fontsize=tick_font_size)

@@ -201,7 +201,8 @@ def displayHistFigure(dictFunct, rangeUp, binsize, path, maxima_matrix_x):
         PNG file.
     """
     output_file_path = path + "_peaks.json"
-    plt.figure(figsize=(15, 5))  # size of the figure
+    #plt.figure(figsize=(15, 5))  # size of the figure
+    plt.figure(figsize=(9, 3))  # size of the figure
     dict_of_peaks ={}
     for i in dictFunct.keys():  # i is the array for which we are tracing the histogramm
 
@@ -281,7 +282,7 @@ def plot_matrix_histogram(matrix, path):
     cbar.ax.tick_params(labelsize = 10)
     plt.tight_layout()
     if save == True:
-        plt.savefig(os.path.join(path + FIGFORMAT),bbox_inches='tight')
+        plt.savefig(os.path.join(path + FIGFORMAT),bbox_inches='tight', transparent=False, format='pdf')
     plt.close()
 
 

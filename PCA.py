@@ -17,32 +17,34 @@ import numpy as np
 matplotlib.use('Qt5Agg')
 plt.rcParams['font.family'] = 'arial'
 
-label_font_size = 10
-title_font_size = 10
+label_font_size = 13
+title_font_size = 13
 tick_font_size = 10
 FIGFORMAT = 'pdf'
+#Leave it True
 legend = True
-show_plot = False
+show_plot = True
 #Choose which data to plot
 #data_to_plot ="NN"
 data_to_plot ="glyco"
-threed_view =[-177,150]
-
-folders = r"C:\Users\dmoonnu\Desktop\PCA Mannaz Treat"
+#threed_view =[-177,150]
+threed_view =[7,164]
+folders = r"C:\Users\dmoonnu\Desktop\Neurons PCA"
 #folder_names = ["Regular", "Tumor"] 
-folder_names = ["MCF10A", "MCF10AT","MCF10A+TGFb","MCF10AT+TGFb"]
-#folder_names = ["Body", "Dendrons"] 
+#folder_names = ["MCF10A", "MCF10AT","MCF10A+TGFb","MCF10AT+TGFb"]
+folder_names = ["Body", "Dendrons"] 
 
 
 if data_to_plot== "NN":
     keyword="Peaks_Combined"
 if data_to_plot== "glyco":
     keyword="PCA"
-number_of_characters_to_consider = 20
+number_of_characters_to_consider = 10
+
 #Number of axe to use in PCA
 pca_axes = 3
 #Boolean to decide whether to save or not
-save = True
+save = False
 #orientation of the 3d plot [elevation,azimuth]
 
 
@@ -160,6 +162,7 @@ def extract_key_value_pairs(json_files, folder_names,pca_axes):
 
 def plot_pca_3d(df,legend):
     fig = plt.figure(figsize=(3.75, 3.75))
+    #fig = plt.figure(figsize=(3, 3))
     ax = fig.add_subplot(111, projection='3d')
 
     unique_sources = df["Cell Type"].unique()
@@ -167,10 +170,10 @@ def plot_pca_3d(df,legend):
         source_data = df[df["Cell Type"] == source]
         ax.scatter(source_data["PC1"], source_data["PC2"], source_data["PC3"], label=source, s=100, alpha=0.7)
     if keyword == "PCA":
-        fig_suffix = "GlyCO"
+        fig_suffix = "GlyCo"
     elif keyword == "Peaks_Combined":
-        fig_suffix= "NN Peaks"
-    ax.set_title(f'3D PCA Plot of {fig_suffix}', fontsize = title_font_size)
+        fig_suffix= "NN peaks"
+    ax.set_title(f'3D PCA plot of {fig_suffix}', fontsize = title_font_size)
     ax.set_xlabel('PC 1', fontsize = label_font_size)
     ax.set_ylabel('PC 2', fontsize = label_font_size)
     ax.set_zlabel('PC 3', fontsize = label_font_size)
