@@ -11,9 +11,10 @@ import pandas as pd
 import json
 from pathlib import Path
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 import matplotlib
 import numpy as np
+
 matplotlib.use('Qt5Agg')
 plt.rcParams['font.family'] = 'arial'
 
@@ -32,9 +33,15 @@ threed_view =[7,164]
 folders = r"C:\Users\dmoonnu\Desktop\Neurons PCA"
 #folder_names = ["Regular", "Tumor"] 
 #folder_names = ["MCF10A", "MCF10AT","MCF10A+TGFb","MCF10AT+TGFb"]
-folder_names = ["Body", "Dendrons"] 
+folder_names = ["Body", "Dendrons"]
+ 
+#set coloring
+colors = plt.cm.tab10(range(len(folder_names)))
+color_map = dict(zip(folder_names, colors))
+#color_map = {cell: colormap(i) for i, cell in enumerate(folder_names)}
 
 
+#%%
 if data_to_plot== "NN":
     keyword="Peaks_Combined"
 if data_to_plot== "glyco":
@@ -168,7 +175,8 @@ def plot_pca_3d(df,legend):
     unique_sources = df["Cell Type"].unique()
     for source in unique_sources:
         source_data = df[df["Cell Type"] == source]
-        ax.scatter(source_data["PC1"], source_data["PC2"], source_data["PC3"], label=source, s=100, alpha=0.7)
+        color_view = color_map[source]
+        ax.scatter(source_data["PC1"], source_data["PC2"], source_data["PC3"], label=source, s=100, color=color_view)
     if keyword == "PCA":
         fig_suffix = "GlyCo"
     elif keyword == "Peaks_Combined":
@@ -208,7 +216,7 @@ def plot_pca(df):
     # Plotting the PCA results (PC1 vs PC2)
     
     plt.figure(figsize=(10, 6))
-    sns.scatterplot(data=df, x="PC1", y="PC2", hue="Cell Type", palette="Set1", s=100, alpha=0.7)
+    #sns.scatterplot(data=df, x="PC1", y="PC2", hue="Cell Type", palette="Set1", s=100, alpha=0.7)
 
     if keyword == "PCA":
         fig_suffix = "GlyCO"
