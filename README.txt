@@ -15,6 +15,7 @@ How to proceed?
 * This yml file holds all the required dependencies which will be seamlessly installed with the installation of the environment using the file. 
 * After the installation continue with the anaconda prompt, type >>conda activate picassoenv<<
 * After the environment is activated type >>spyder<<. A new window for spyder will open.
+* Set the matplotlib plotting backend to Qt in spyder. Tools>Preferences>IPython console>Graphics> Select backend as Qt
 
 Runing the scripts
 * Copy the path to folder containing localizations from a single cell. Paste this path to the value localization_folder in parameter_file.json in the repository. Use “\\” instead of “\” in the path.
