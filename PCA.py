@@ -14,6 +14,22 @@ import matplotlib.pyplot as plt
 #import seaborn as sns
 import matplotlib
 import numpy as np
+#%%User Inputs
+#path to parent folder
+folders = r"C:\Users\dmoonnu\Desktop\Glycan Atlassing\PCA Mannaz Treat"
+#name of subfolders denoting condition
+folder_names = ["MCF10A", "MCF10AT","MCF10A+TGFb","MCF10AT+TGFb"]
+#Choose which data to plot
+#data_to_plot ="NN"
+data_to_plot ="glyco"
+threed_view =[7,164]
+save = False
+legend = True
+show_plot = True
+FIGFORMAT = 'pdf'
+
+#This controls the number of glyco classes considered
+number_of_characters_to_consider = 10
 
 matplotlib.use('Qt5Agg')
 plt.rcParams['font.family'] = 'arial'
@@ -21,19 +37,8 @@ plt.rcParams['font.family'] = 'arial'
 label_font_size = 13
 title_font_size = 13
 tick_font_size = 10
-FIGFORMAT = 'pdf'
-#Leave it True
-legend = True
-show_plot = True
-#Choose which data to plot
-#data_to_plot ="NN"
-data_to_plot ="glyco"
-#threed_view =[-177,150]
-threed_view =[7,164]
-folders = r"C:\Users\dmoonnu\Desktop\Neurons PCA"
-#folder_names = ["Regular", "Tumor"] 
-#folder_names = ["MCF10A", "MCF10AT","MCF10A+TGFb","MCF10AT+TGFb"]
-folder_names = ["Body", "Dendrons"]
+#%%matplotlib setting
+
  
 #set coloring
 colors = plt.cm.tab10(range(len(folder_names)))
@@ -46,12 +51,12 @@ if data_to_plot== "NN":
     keyword="Peaks_Combined"
 if data_to_plot== "glyco":
     keyword="PCA"
-number_of_characters_to_consider = 10
+
 
 #Number of axe to use in PCA
 pca_axes = 3
 #Boolean to decide whether to save or not
-save = False
+
 #orientation of the 3d plot [elevation,azimuth]
 
 
@@ -176,7 +181,7 @@ def plot_pca_3d(df,legend):
     for source in unique_sources:
         source_data = df[df["Cell Type"] == source]
         color_view = color_map[source]
-        ax.scatter(source_data["PC1"], source_data["PC2"], source_data["PC3"], label=source, s=100, color=color_view)
+        ax.scatter(source_data["PC1"], source_data["PC2"], source_data["PC3"], label=source, s=100, color=color_view, alpha=0.7)
     if keyword == "PCA":
         fig_suffix = "GlyCo"
     elif keyword == "Peaks_Combined":

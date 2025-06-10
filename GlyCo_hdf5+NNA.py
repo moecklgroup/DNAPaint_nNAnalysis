@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Sep 30 09:26:13 2024
-This code is intended to cluster the multidimensional super resolution data within a given radius. Localization data(cluster centers) should be saved
-in a folder with the filenames starting with the corresponding lectin followed by underscores. (eg: "AAL_and whatever necesssary").
+This code is intended to cluster the multidimensional super resolution data within a given radius. Localization data should be saved
+in a folder with the filenames starting with the corresponding lectin followed by underscores. (eg: "AAL_and whatever necessary").
 This folder should be given as the input in the variable "localization folder". Also set the radius. The outputs are multidimensional 
-cluster information as a joson file, bar chart of the top classes, and the scatter plot of top x class location.  
+cluster information as a json file, bar chart of the top classes, and the scatter plot of top x class location.  
 
-Codes are supposed to be run at the level of a single cell. ie. Folder containing cluster centers of individual cells
-The script uses picasso software package from jungamnn lab (https://github.com/jungmannlab/picasso?tab=readme-ov-file) ver-0.7.4 with tailored modifications.
+Codes are supposed to be run at the level of a single cell. ie. Folder containing localization data of individual cells
+The script uses picasso software package from jungmann lab (https://github.com/jungmannlab/picasso?tab=readme-ov-file) ver-0.7.4 with tailored modifications.
 @author: dmoonnu
 """
 ###############################CUSTOM RENDER###################################
