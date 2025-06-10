@@ -7,32 +7,42 @@ This folder should be given as the input in the variable "localization folder". 
 cluster information as a joson file, bar chart of the top classes, and the scatter plot of top x class location.  
 
 Codes are supposed to be run at the level of a single cell. ie. Folder containing cluster centers of individual cells
+The script uses picasso software package from jungamnn lab (https://github.com/jungmannlab/picasso?tab=readme-ov-file) ver-0.7.4 with tailored modifications.
 @author: dmoonnu
 """
 ###############################CUSTOM RENDER###################################
-#User Inputs
-
+#%%User Inputs
+#Number of channels in the dataset. This is basically to distinguish if the data has channel DBCO or not.
+num_channels = 5
+# Pixel size after binning
 pixelsize =130
+#Minimum number of localizations to be considered in a cluster. This will be n+1. So 1 means 2 localiztions are present in a cluster.
 min_locs =1
+#Boolean to decide for basic frame analysis
 frame_analysis = True
 #Nena Factor for clustering
 xnena = 2
+#Format to save the output figures
+FIGFORMAT = '.pdf'
+
 
 #Based on the dataset (with or without metabolic labelling) use one of the following dictionaries
-dictionaryNames = {'wga': 'WGA',
-                   'sna': 'SNA',
-                   'phal': 'PHAL',
-                   'aal': 'AAL',
-                   'psa': 'PSA'}
 
-# dictionaryNames = {'wga': 'WGA',
-#                    'sna': 'SNA',
-#                    'phal': 'PHAL',
-#                    'aal': 'AAL',
-#                    'psa': 'PSA',
-#                    'dbco': 'DBCO'}
+if num_channels == 5:
+    dictionaryNames = {'wga': 'WGA',
+                       'sna': 'SNA',
+                       'phal': 'PHAL',
+                       'aal': 'AAL',
+                       'psa': 'PSA'}
+if num_channels == 6:
+    dictionaryNames = {'wga': 'WGA',
+                        'sna': 'SNA',
+                        'phal': 'PHAL',
+                        'aal': 'AAL',
+                        'psa': 'PSA',
+                        'dbco': 'DBCO'}
 
-FIGFORMAT = '.pdf'
+
 #%%Imports
 from custom_picasso import postprocess, io
 from custom_picasso import clusterer
