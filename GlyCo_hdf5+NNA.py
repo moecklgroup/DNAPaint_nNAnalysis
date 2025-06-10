@@ -18,11 +18,20 @@ frame_analysis = True
 #Nena Factor for clustering
 xnena = 2
 
+#Based on the dataset (with or without metabolic labelling) use one of the following dictionaries
 dictionaryNames = {'wga': 'WGA',
                    'sna': 'SNA',
                    'phal': 'PHAL',
                    'aal': 'AAL',
                    'psa': 'PSA'}
+
+# dictionaryNames = {'wga': 'WGA',
+#                    'sna': 'SNA',
+#                    'phal': 'PHAL',
+#                    'aal': 'AAL',
+#                    'psa': 'PSA',
+#                    'dbco': 'DBCO'}
+
 FIGFORMAT = '.pdf'
 #%%Imports
 from custom_picasso import postprocess, io
@@ -395,7 +404,7 @@ plt.bar(categories_, area_normalized_values, color=bar_colors, edgecolor='black'
 plt.xticks(rotation=45, ha='right')
 #plt.xlabel('Categories', fontsize=label_font_size)
 plt.ylabel('Count per μm\u00b2', fontsize=label_font_size)
-plt.title('Lectin Classes distribution', fontsize=title_font_size)
+plt.title('Lectin classes distribution', fontsize=title_font_size)
 plt.xticks(fontsize = tick_font_size)
 plt.yticks(fontsize = tick_font_size)
 plt.show()
@@ -474,37 +483,63 @@ location_dictionary_sorted = sorted(location_dictionary.items(), key=lambda item
 data_to_plot = location_dictionary_sorted[:number_to_plot]
 
 #%% Plotting
+from matplotlib.ticker import MultipleLocator
 plt.figure(figsize=(2.57,2.57), dpi=dpi)
 # Assign unique colors for each key
-dots_colors = plt.cm.tab10(range(len(data_to_plot)))  # Generate distinct colors for the top 5
-for (key, coords), dot_color in zip(data_to_plot, dots_colors):
+colors = plt.cm.tab10(range(len(data_to_plot)))  # Generate distinct colors for the top 5
+
+# Find global min for shifting
+all_coords = [coord for _, coords in data_to_plot for coord in coords]
+scaled_all_coords = [(x * scale_factor, y * scale_factor) for x, y in all_coords]
+all_x_vals, all_y_vals = zip(*scaled_all_coords)
+
+global_x_min = min(all_x_vals)
+global_y_min = min(all_y_vals)
+global_y_max = max(all_y_vals) 
+global_x_max = max(all_x_vals) 
+
+
+for (key, coords), color in zip(data_to_plot, colors):
     # Scale coordinates to micrometers
-    scaled_coords = [(x * scale_factor, y * scale_factor) for x, y in coords]
-    x_vals, y_vals = zip(*scaled_coords)  # Unpack x and y coordinates
+    # scaled_coords = [(x * scale_factor, y * scale_factor) for x, y in coords]
+    
+    # x_vals, y_vals = zip(*scaled_coords)  # Unpack x and y coordinates
+    #Shift and scale coordinates
+    shifted_coords = [((x * scale_factor) - global_x_min,
+                      global_y_max-(y * scale_factor))
+                     for x, y in coords]
+    x_vals, y_vals = zip(*shifted_coords)
     
     # Set a fixed spot size for all points (e.g., 50 points²)
-    plt.scatter(x_vals, y_vals, label=str(key), color=dot_color, s=0.05)  # Scatter plot
+    plt.scatter(x_vals, y_vals, label=str(key), color=color, s=0.1)  # Scatter plot
 #just in case if the cell is smaller we have to put it to the middle zoomed in
 if zoom==True:
-    x_min, x_max = min(x_vals), max(x_vals)
-    y_min, y_max = min(y_vals), max(y_vals)
     padding =0
-    x_range = x_max - x_min
-    y_range = y_max - y_min
-    plt.xlim(x_min - padding * x_range, x_max + padding * x_range)
-    plt.ylim(y_min - padding * y_range, y_max + padding * y_range)
+    x_range = global_x_max - global_x_min
+    y_range = global_y_max - global_y_min
+    #If ticks need to be in the same values as the original position on the camera
+    # plt.xlim(x_min - padding * x_range, x_max + padding * x_range)
+    # plt.ylim(y_min - padding * y_range, y_max + padding * y_range)
+    plt.xlim(0,x_range)
+    plt.ylim(0,y_range)
+    # plt.xlim(0, x_range)
+    # plt.ylim(0, y_range)
+    
 # Set axis limits to match the full field of view. for bigger cells covering the fulll FOV we dont have to zoom it.
 elif zoom == False:
     plt.xlim(0, field_of_view)  # 0 to 74.88 µm
     plt.ylim(0, field_of_view)  # 0 to 74.88 µm
 
 # Invert the y-axis to set the origin at the top-left to match the orientation of the reconstruction
-plt.gca().invert_yaxis()
-
+#plt.gca().invert_yaxis()
+ax = plt.gca()
+tick_spacing = 10
+ax.xaxis.set_major_locator(MultipleLocator(tick_spacing))
+ax.yaxis.set_major_locator(MultipleLocator(tick_spacing))
 # Add labels
 
-plt.xlabel("X Coordinate (µm)", fontsize = label_font_size)
-plt.ylabel("Y Coordinate (µm)", fontsize = label_font_size)
+plt.xlabel("x (µm)", fontsize = label_font_size)
+plt.ylabel("y (µm)", fontsize = label_font_size)
 plt.title(f"Top {number_to_plot} classes", fontsize = title_font_size)
 plt.xticks(fontsize = tick_font_size)
 plt.yticks(fontsize=tick_font_size)
@@ -514,6 +549,7 @@ plt.grid(False)
 plt.show()
 if save == True:
     plt.savefig(localization_folder/f"{timestamp}_Class_location_{radius}nm{FIGFORMAT}",bbox_inches='tight') 
+
 
 
 #plt.close("all")
