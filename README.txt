@@ -16,6 +16,7 @@ How to proceed?
 * After the installation continue with the anaconda prompt, type >>conda activate picassoenv<<
 * After the environment is activated type >>spyder<<. A new window for spyder will open.
 * Set the matplotlib plotting backend to Qt in spyder. Tools>Preferences>IPython console>Graphics> Select backend as Qt
+* Edit python path to add the "Custom-Picasso" folder from the repository. Go to Tools>PYTHON PATHMANAGER> add the "Cutom-Picasso" folder.
 
 Runing the scripts
 * Copy the path to folder containing localizations from a single cell. Paste this path to the value localization_folder in parameter_file.json in the repository. Use “\\” instead of “\” in the path.
