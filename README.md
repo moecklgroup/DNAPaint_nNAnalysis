@@ -10,7 +10,7 @@ For reconstruction, drift correction, alignment and segmentation Picasso softwar
 All the dependencies (listed in picassoenv.yml) are installed while installing the environment – explained in the further steps.
 
 **How to proceed?**
-	Setting up the system
+**<u>Setting up the system</u>**
 * Clone or download the repository to your system
 * Install anaconda navigator (Download Anaconda Distribution | Anaconda)
 * Install the picasso environment using the file picassoenv.yml in Custom-Picasso folder. To install, open anaconda prompt on your pc and type in >>conda env create -f “path to the yml file” << and hit enter.
@@ -20,7 +20,7 @@ All the dependencies (listed in picassoenv.yml) are installed while installing t
 * Set the matplotlib plotting backend to Qt in spyder. Tools>Preferences>IPython console>Graphics> Select backend as Qt
 * Edit python path to add the "Custom-Picasso" folder from the repository. Go to Tools>PYTHON PATHMANAGER> add the "Cutom-Picasso" folder.
 
-**Runing the scripts**
+**<u>Runing the scripts</u>**
 * Copy the path to folder containing localizations from a single cell. Paste this path to the value localization_folder in parameter_file.json in the repository. Use “\\” instead of “\” in the path.
 *  Open the GlyCo_hdf5+NNA.py file. In the user input cell, set the desired values and hit run. By default, the settings are:
 
@@ -39,7 +39,7 @@ FIGFORMAT = '.pdf'
 
 In a normal desktop PC (2.90 GHz processor, 16GB RAM) the script takes about 20 minutes to run per cell. 
 
-**PCA**
+**<u>PCA</u>**
 
 For PCA, we need a new file structure. To make it easy, copy the contents inside the localization centers folder (90_Custom Centers) from each cell and create a file structure as follows:
 Parent_folder-
@@ -54,9 +54,4 @@ Parent_folder-
 Copy the parent folder path to variable “folder” in the PCA.py script. Adjust the “folder_names” variables according to the folder names of conditions. Do the PCA separately on NN distances and glyco by adjusting the variable “data_to_plot”, hit run.
 
 
-
-
-script documentation and use protocols on the group wiki: 
-https://beta.slimwiki.com/moeckl-group/all-users-efxf7z4el/nearest-neighbor-and-cluster-analysis-by-chlo%C3%A9-ejerwhrdj-ps7a75axpifg
-Guidelines on using codes from github: https://slimwiki.com/moeckl-group/all-users-efxf7z4el/guidelines-to-use-github-2vylx13ipa
 
