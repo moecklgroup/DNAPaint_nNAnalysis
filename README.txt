@@ -1,3 +1,5 @@
+# Glycan-Atlassing
+**Summary** 
 This code is intended to cluster the multidimensional super resolution data within a given radius, perform nearest neighbor analysis and GlyCo. Localization data from each cell should be saved in a folder with the filenames starting with the corresponding lectin followed by underscores. (eg: "AAL_and whatever necessary information"). This folder path is to be given as the input in the variable "localization folder" in the parameter_file.json.
 The outputs are multidimensional cluster information as a json file, bar chart of the top classes, and the scatter plot of top x class location.  Codes are supposed to be run at the level of a single cell. i.e. Folder containing localization data of individual cells are required. 
 The script uses Picasso software package from Jungmann lab (https://github.com/jungmannlab/picasso?tab=readme-ov-file) ver-0.7.4 for clustering with tailored modifications.
@@ -5,21 +7,21 @@ The script uses Picasso software package from Jungmann lab (https://github.com/j
 
 For reconstruction, drift correction, alignment and segmentation Picasso software version 0.7.4 is used. After segmentation the localizations from each cell are stored in separate folders. 
 
-All the dependencies (listed in picassoenv.yml) are installed while installing the environment ñ explained in the further steps.
+All the dependencies (listed in picassoenv.yml) are installed while installing the environment ‚Äì explained in the further steps.
 
-How to proceed?
+**How to proceed?**
 	Setting up the system
 * Clone or download the repository to your system
 * Install anaconda navigator (Download Anaconda Distribution | Anaconda)
-* Install the picasso environment using the file picassoenv.yml in Custom-Picasso folder. To install, open anaconda prompt on your pc and type in >>conda env create -f ìpath to the yml fileî << and hit enter.
+* Install the picasso environment using the file picassoenv.yml in Custom-Picasso folder. To install, open anaconda prompt on your pc and type in >>conda env create -f ‚Äúpath to the yml file‚Äù << and hit enter.
 * This yml file holds all the required dependencies which will be seamlessly installed with the installation of the environment using the file. 
 * After the installation continue with the anaconda prompt, type >>conda activate picassoenv<<
 * After the environment is activated type >>spyder<<. A new window for spyder will open.
 * Set the matplotlib plotting backend to Qt in spyder. Tools>Preferences>IPython console>Graphics> Select backend as Qt
 * Edit python path to add the "Custom-Picasso" folder from the repository. Go to Tools>PYTHON PATHMANAGER> add the "Cutom-Picasso" folder.
 
-Runing the scripts
-* Copy the path to folder containing localizations from a single cell. Paste this path to the value localization_folder in parameter_file.json in the repository. Use ì\\î instead of ì\î in the path.
+**Runing the scripts**
+* Copy the path to folder containing localizations from a single cell. Paste this path to the value localization_folder in parameter_file.json in the repository. Use ‚Äú\\‚Äù instead of ‚Äú\‚Äù in the path.
 *  Open the GlyCo_hdf5+NNA.py file. In the user input cell, set the desired values and hit run. By default, the settings are:
 
 num_channels = 5
@@ -37,7 +39,7 @@ FIGFORMAT = '.pdf'
 
 In a normal desktop PC (2.90 GHz processor, 16GB RAM) the script takes about 20 minutes to run per cell. 
 
-PCA
+**PCA**
 
 For PCA, we need a new file structure. To make it easy, copy the contents inside the localization centers folder (90_Custom Centers) from each cell and create a file structure as follows:
 Parent_folder-
@@ -49,7 +51,7 @@ Parent_folder-
 		-Cell1
 		-Cell2
 		-Cell3
-Copy the parent folder path to variable ìfolderî in the PCA.py script. Adjust the ìfolder_namesî variables according to the folder names of conditions. Do the PCA separately on NN distances and glyco by adjusting the variable ìdata_to_plotî, hit run.
+Copy the parent folder path to variable ‚Äúfolder‚Äù in the PCA.py script. Adjust the ‚Äúfolder_names‚Äù variables according to the folder names of conditions. Do the PCA separately on NN distances and glyco by adjusting the variable ‚Äúdata_to_plot‚Äù, hit run.
 
 
 
