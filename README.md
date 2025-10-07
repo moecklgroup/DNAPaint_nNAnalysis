@@ -1,5 +1,6 @@
 # Glycan-Atlassing
 **Summary** 
+
 This code is intended to cluster the multidimensional super resolution data within a given radius, perform nearest neighbor analysis and GlyCo. Localization data from each cell should be saved in a folder with the filenames starting with the corresponding lectin followed by underscores. (eg: "AAL_and whatever necessary information"). This folder path is to be given as the input in the variable "localization folder" in the parameter_file.json.
 The outputs are multidimensional cluster information as a json file, bar chart of the top classes, and the scatter plot of top x class location.  Codes are supposed to be run at the level of a single cell. i.e. Folder containing localization data of individual cells are required. 
 The script uses Picasso software package from Jungmann lab (https://github.com/jungmannlab/picasso?tab=readme-ov-file) ver-0.7.4 for clustering with tailored modifications.
